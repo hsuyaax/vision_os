@@ -1,184 +1,199 @@
-# VisionSync - Multi-Camera AI Surveillance System
+# VisionSync — AI Surveillance OS
 
-A real-time AI-powered surveillance system with vertical-specific logic for Safety, Traffic, Manufacturing, and Restaurant monitoring.
+A real-time AI-powered multi-camera surveillance system with vertical-specific analytics for Safety, Traffic, Manufacturing, and Restaurant monitoring.
+
+**Frontend:** Next.js 16 + TypeScript + Tailwind CSS v4 + shadcn/ui + Recharts  
+**Backend:** FastAPI + Uvicorn + YOLOv8 (Ultralytics) + Supervision  
+**Database:** SQLite  
+
+---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.12+ (already installed at: `C:\Users\aggar\AppData\Local\Programs\Python\Python312\python.exe`)
-- Web browser (Chrome, Firefox, or Edge recommended)
+- **Python 3.12+** (installed at `C:\Users\aggar\AppData\Local\Programs\Python\Python312\python.exe`)
+- **Node.js 18+** and npm
+- Web browser (Chrome, Firefox, or Edge)
 
 ### Installation
 
-All dependencies are already installed! The system includes:
-- ultralytics (YOLOv8)
-- supervision
-- fastapi & uvicorn
-- opencv-python
-- websockets
-- and more...
+**Backend dependencies** (already installed):
+```
+ultralytics, supervision, fastapi, uvicorn, opencv-python, websockets, python-multipart, huggingface_hub
+```
+
+**Frontend dependencies:**
+```powershell
+cd frontend
+npm install
+```
+
+---
 
 ## 📁 Project Structure
 
 ```
 vision_os/
 ├── backend/
-│   ├── main.py              # FastAPI application
-│   ├── camera_manager.py    # Video capture handling
-│   ├── inference_engine.py  # YOLOv8 inference
-│   ├── db.py                # SQLite database
-│   ├── alert_manager.py     # Alert system
+│   ├── main.py              # FastAPI app (14 endpoints + 2 WebSockets)
+│   ├── camera_manager.py    # Video capture & frame queue
+│   ├── inference_engine.py  # YOLOv8 inference + MJPEG stream
+│   ├── db.py                # SQLite database manager
+│   ├── alert_manager.py     # Alert pub/sub with cooldown
 │   ├── logic/
-│   │   ├── safety.py        # PPE & fall detection
-│   │   ├── traffic.py       # Vehicle counting
-│   │   ├── manufacturing.py # Defect detection
-│   │   └── restaurant.py    # Occupancy tracking
-│   └── models/              # AI model weights go here
-├── frontend/
-│   ├── index.html           # Dashboard UI
-│   ├── dashboard.js         # WebSocket client
-│   └── styles.css           # Styling
+│   │   ├── __init__.py
+│   │   ├── safety.py        # PPE compliance, fall detection, zone intrusion
+│   │   ├── traffic.py       # Vehicle counting, speed estimation, violations
+│   │   ├── manufacturing.py # Defect detection, pass rate, inspection
+│   │   └── restaurant.py    # Occupancy tracking, dwell time, table mgmt
+│   └── models/              # AI model weights (.pt files)
+├── frontend/                # Next.js 16 application
+│   ├── src/
+│   │   ├── app/
+│   │   │   ├── layout.tsx       # Root layout (dark theme, Toaster)
+│   │   │   ├── page.tsx         # Overview dashboard
+│   │   │   ├── monitor/page.tsx # Live video monitor
+│   │   │   ├── analytics/page.tsx # Charts & events log
+│   │   │   ├── alerts/page.tsx  # Alert timeline
+│   │   │   └── settings/page.tsx # Configuration
+│   │   ├── components/
+│   │   │   ├── app-shell.tsx    # Layout wrapper with sidebar
+│   │   │   ├── sidebar.tsx      # Desktop sidebar navigation
+│   │   │   ├── mobile-nav.tsx   # Mobile sheet navigation
+│   │   │   ├── providers.tsx    # VisionSync context provider
+│   │   │   └── ui/             # 17 shadcn/ui components
+│   │   ├── hooks/
+│   │   │   └── use-vision-sync.ts # WebSocket + demo mode hook
+│   │   └── lib/
+│   │       ├── api.ts           # Backend API client
+│   │       ├── demo-data.ts     # Simulated data for demo mode
+│   │       └── utils.ts         # shadcn utilities
+│   ├── components.json         # shadcn/ui config
+│   ├── package.json
+│   └── tsconfig.json
 ├── demo/                    # Demo videos go here
-└── config.json              # Configuration file
+├── config.json              # System configuration
+├── .gitignore
+└── README.md
 ```
 
-## 🎬 Getting Demo Videos
-
-### Option 1: Download from Pexels (Free, No Login Required)
-
-1. **Safety/Construction Videos:**
-   - Visit: https://www.pexels.com/search/videos/construction%20worker/
-   - Download any construction site video
-   - Save as: `demo/safety_sample.mp4`
-
-2. **Traffic Videos:**
-   - Visit: https://www.pexels.com/search/videos/traffic/
-   - Download a video with vehicles
-   - Save as: `demo/traffic_sample.mp4`
-
-3. **Manufacturing Videos:**
-   - Visit: https://www.pexels.com/search/videos/factory/
-   - Download a factory/assembly line video
-   - Save as: `demo/manufacturing_sample.mp4`
-
-4. **Restaurant Videos:**
-   - Visit: https://www.pexels.com/search/videos/restaurant/
-   - Download a restaurant interior video
-   - Save as: `demo/restaurant_sample.mp4`
-
-### Option 2: Use Webcam
-- Simply use `0` as the video source to use your webcam
-
-### Option 3: YouTube Downloads
-Use a YouTube downloader (e.g., yt-dlp) to download sample videos:
-```powershell
-# Example search terms:
-# "construction site time lapse"
-# "traffic intersection camera"
-# "factory production line"
-# "restaurant security camera"
-```
+---
 
 ## 🏃 Running the System
 
-### Step 1: Start the Backend Server
-
-Open PowerShell and run:
+### Step 1: Start the Backend
 
 ```powershell
 cd "C:\Users\aggar\OneDrive\Desktop\vision_os\backend"
 C:\Users\aggar\AppData\Local\Programs\Python\Python312\python.exe main.py
 ```
 
-The server will start on: http://localhost:8000
+Backend runs at: **http://localhost:8000**  
+Interactive API docs: **http://localhost:8000/docs**
 
-You should see:
+### Step 2: Start the Frontend
+
+```powershell
+cd "C:\Users\aggar\OneDrive\Desktop\vision_os\frontend"
+npm run dev
 ```
-INFO: Started server process
-INFO: Waiting for application startup.
-INFO: VisionSync started successfully
-INFO: Application startup complete.
-INFO: Uvicorn running on http://0.0.0.0:8000
-```
 
-### Step 2: Open the Dashboard
+Frontend runs at: **http://localhost:3000**
 
-1. Open your web browser
-2. Navigate to: `C:\Users\aggar\OneDrive\Desktop\vision_os\frontend\index.html`
-3. Or open the file directly in your browser
+### Step 3: Use the App
 
-### Step 3: Start a Feed
+1. Open **http://localhost:3000** in your browser
+2. The dashboard loads in **Demo Mode** by default (simulated data, no backend needed)
+3. To use live feeds, go to **Settings** → disable Demo Mode → test connection
+4. Go to **Live Monitor** → enter a video source → select vertical → click **Start**
 
-1. In the dashboard sidebar:
-   - **Video Source:** Enter `0` for webcam OR path to video like `../demo/safety_sample.mp4`
-   - **Select Vertical:** Choose your use case (Safety, Traffic, Manufacturing, Restaurant)
-   - Click **"Start Feed"**
+---
 
-2. The video stream will appear with AI detections overlaid
-3. Metrics will update in real-time
-4. Alerts will appear in the sidebar and as toast notifications
+## 📺 Pages
 
-## 🎯 Verticals Explained
+### Dashboard (`/`)
+- Hero stat cards: Detections, FPS, Latency, Uptime
+- Real-time detection trend area chart
+- Alert summary by severity (Critical / High / Medium)
+- Vertical selector cards (click to switch active vertical)
+- Recent activity feed
 
-### 🦺 Safety
-- **Detects:** People, PPE (helmets, vests)
-- **Alerts for:**
-  - PPE violations (missing helmet/vest)
-  - Fall detection (horizontal person)
-  - Restricted zone intrusions
-- **Use Case:** Construction sites, warehouses, factories
+### Live Monitor (`/monitor`)
+- Video feed panel with MJPEG stream
+- Source input (webcam `0` or file path / URL)
+- Vertical selector dropdown
+- Start / Stop controls
+- Live overlay: LIVE badge, FPS, latency
+- Side panel: quick stats, vertical-specific metrics, recent alerts
 
-### 🚗 Traffic
-- **Detects:** Vehicles (cars, trucks, buses, motorcycles, bicycles)
-- **Alerts for:**
-  - Speed violations
-  - Counting line crossings
-- **Metrics:** Vehicle counts by type, average speed
-- **Use Case:** Traffic monitoring, parking lots
+### Analytics (`/analytics`)
+- **Charts tab:** Detections over time, FPS & Latency (dual-axis), Severity doughnut, Alerts by vertical bar, Detection classes horizontal bar
+- **Events Log tab:** Searchable table with timestamp, class, confidence, vertical, details
 
-### 🏭 Manufacturing
-- **Detects:** Products, defects, scratches, dents
-- **Alerts for:**
-  - Defective products
-  - High defect rates
-- **Metrics:** Pass/fail rate, defect counts
-- **Use Case:** Quality control, assembly lines
+### Alerts (`/alerts`)
+- Filter by severity (Critical / High / Medium) and vertical
+- Timeline view with colored severity icons and connector lines
+- Alert type badges and timestamps
 
-### 🍽️ Restaurant
-- **Detects:** People, tables, chairs
-- **Alerts for:**
-  - Capacity exceeded
-  - Long customer dwell times
-- **Metrics:** Occupancy rate, table status, avg dwell time
-- **Use Case:** Restaurant management, occupancy monitoring
+### Settings (`/settings`)
+- Demo Mode toggle (simulated data without backend)
+- Backend URL with connection test button
+- Active vertical selector
+- System info (stack, version, repo link)
 
-## 📊 Dashboard Features
+---
 
-### Real-time Video Stream
-- Live video with AI detections overlaid
-- Bounding boxes with class labels and confidence scores
-- FPS counter
+## 🎯 Verticals
 
-### Metrics Cards
-- 4 key metrics updated in real-time
-- Different metrics for each vertical
+| Vertical | Detects | Key Alerts | Metrics |
+|----------|---------|------------|---------|
+| 🦺 **Safety** | People, PPE (helmets, vests) | PPE violations, fall detection, zone intrusion | Compliance rate, persons detected |
+| 🚗 **Traffic** | Vehicles (cars, trucks, buses) | Speed violations, line crossings | Vehicle counts, avg speed |
+| 🏭 **Manufacturing** | Products, defects | Defective items, low pass rate | Pass rate, defect count, inspected total |
+| 🍽️ **Restaurant** | People, tables | Overcrowding, long dwell times | Occupancy, table status, avg dwell |
 
-### Analytics Chart
-- Real-time line chart of primary metric
-- Last 20 data points displayed
+---
 
-### Event Log
-- Table of all events/alerts
-- Filterable by time, type, severity
+## 🎬 Getting Demo Videos
 
-### Alerts Sidebar
-- Real-time alert notifications
-- Last 10 alerts displayed
-- Color-coded by severity
+### Option 1: Pexels (Free, No Login)
+- **Safety:** https://www.pexels.com/search/videos/construction%20worker/
+- **Traffic:** https://www.pexels.com/search/videos/traffic/
+- **Manufacturing:** https://www.pexels.com/search/videos/factory/
+- **Restaurant:** https://www.pexels.com/search/videos/restaurant/
+
+Save to `demo/` folder (e.g., `demo/safety_sample.mp4`).
+
+### Option 2: Webcam
+Use `0` as video source in the Live Monitor page.
+
+---
+
+## 📝 API Reference
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/health` | Health check |
+| `POST` | `/api/feed/start` | Start video feed (body: `{source, vertical}`) |
+| `POST` | `/api/feed/stop` | Stop video feed |
+| `GET` | `/stream` | MJPEG video stream |
+| `GET` | `/api/stats` | Current statistics |
+| `GET` | `/api/events?limit=50` | Event history |
+| `GET` | `/api/metrics/history?minutes=30` | Metrics time series |
+| `GET` | `/api/alerts/recent?limit=20` | Recent alerts |
+| `GET` | `/api/db/stats` | Database statistics |
+| `GET` | `/api/verticals` | Available verticals |
+| `POST` | `/api/zones/set` | Set detection zones |
+| `WS` | `/ws/stats` | Real-time stats WebSocket |
+| `WS` | `/ws/alerts` | Real-time alerts WebSocket |
+
+Full Swagger docs at **http://localhost:8000/docs** when backend is running.
+
+---
 
 ## 🔧 Configuration
 
-Edit `config.json` to customize:
+Edit `config.json`:
 
 ```json
 {
@@ -192,91 +207,46 @@ Edit `config.json` to customize:
       "speed_limit": 50,
       "vehicle_classes": ["car", "truck", "bus"]
     }
-    // ... etc
-  }
+  },
+  "camera": { "width": 640, "height": 480, "fps": 30 },
+  "server": { "host": "0.0.0.0", "port": 8000 }
 }
 ```
 
-## 🧪 Testing the System
-
-### Test with Webcam (Quick Test)
-1. Start backend server
-2. Open dashboard
-3. Source: `0`, Vertical: `Safety`
-4. Click "Start Feed"
-5. Wave your hand or move around - you'll be detected as "person"
-
-### Test with Video File
-1. Download a demo video to the `demo/` folder
-2. Start backend server
-3. Open dashboard  
-4. Source: `../demo/safety_sample.mp4`
-5. Vertical: `Safety`
-6. Click "Start Feed"
-7. Video will loop automatically
+---
 
 ## 🐛 Troubleshooting
 
-### Backend won't start
-- Check Python path is correct
-- Verify all packages are installed: `python -m pip list`
-- Check port 8000 isn't already in use
+| Problem | Solution |
+|---------|----------|
+| Backend won't start | Check Python path; verify packages with `pip list`; kill port 8000 if in use |
+| Frontend won't start | Run `npm install` in `frontend/`; check Node.js version |
+| Video stream not showing | Ensure backend is running; check video source path; try webcam `0` first |
+| WebSocket connection fails | Refresh page; check backend logs; verify CORS settings |
+| Low FPS | YOLOv8n is used (fastest); reduce resolution in `config.json`; close other apps |
 
-### Video stream not showing
-- Make sure backend is running
-- Check browser console (F12) for errors
-- Verify video source path is correct
-- Try using `0` for webcam first
-
-### WebSocket connection fails
-- Refresh the page
-- Check backend logs for errors
-- Ensure firewall isn't blocking localhost:8000
-
-### Low FPS / Slow inference
-- YOLOv8n is the fastest model
-- Reduce camera resolution in config.json
-- Close other resource-intensive applications
-
-## 📝 API Endpoints
-
-- `POST /api/feed/start` - Start video feed
-- `POST /api/feed/stop` - Stop video feed
-- `GET /stream` - MJPEG video stream
-- `WS /ws/stats` - Real-time statistics WebSocket
-- `WS /ws/alerts` - Real-time alerts WebSocket
-- `GET /api/events` - Get event history
-- `GET /api/stats` - Get current statistics
-- `GET /api/health` - Health check
-
-Full API docs: http://localhost:8000/docs (when server is running)
+---
 
 ## 🎓 Next Steps
 
-1. **Get Better Models:**
-   - PPE Detection: `keremberke/yolov8m-hard-hat-detection` (HuggingFace)
-   - Vehicle Detection: `yolov8m.pt` or `yolov8l.pt` for better accuracy
+1. **Better Models:** Use `yolov8m.pt` or domain-specific models from HuggingFace
+2. **Custom Models:** Place `.pt` files in `backend/models/`, update `config.json`
+3. **Customize Alerts:** Adjust thresholds and cooldown times in `config.json`
+4. **Deploy:** Update CORS origins, use gunicorn/nginx in production
 
-2. **Add Custom Models:**
-   - Put `.pt` files in `backend/models/`
-   - Update model paths in `config.json`
-
-3. **Customize Alerts:**
-   - Edit alert thresholds in `config.json`
-   - Modify cooldown times
-   - Add custom alert logic in vertical processors
-
-4. **Deploy:**
-   - Change `host` in config from `0.0.0.0` to your server IP
-   - Set up proper CORS origins
-   - Use production ASGI server (gunicorn)
+---
 
 ## 📚 Resources
 
-- **YOLOv8 Docs:** https://docs.ultralytics.com/
-- **FastAPI Docs:** https://fastapi.tiangolo.com/
-- **Supervision Docs:** https://supervision.roboflow.com/
-- **Free Videos:** https://www.pexels.com/videos/
+- [Ultralytics YOLOv8](https://docs.ultralytics.com/)
+- [FastAPI](https://fastapi.tiangolo.com/)
+- [Supervision](https://supervision.roboflow.com/)
+- [Next.js](https://nextjs.org/docs)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [Recharts](https://recharts.org/)
+- [Free Videos (Pexels)](https://www.pexels.com/videos/)
+
+---
 
 ## ⚡ Quick Commands
 
@@ -285,15 +255,16 @@ Full API docs: http://localhost:8000/docs (when server is running)
 cd backend
 C:\Users\aggar\AppData\Local\Programs\Python\Python312\python.exe main.py
 
-# Check errors
-# Look at terminal output for logs
+# Start frontend (separate terminal)
+cd frontend
+npm run dev
 
-# Stop server
-# Press Ctrl+C in terminal
+# Build frontend for production
+cd frontend
+npm run build
+npm start
 ```
 
-## 🎉 You're Ready!
+---
 
-Your VisionSync system is fully built and ready to use. Start with a webcam test, then try demo videos for each vertical.
-
-Happy monitoring! 🚀
+**Repository:** https://github.com/hsuyaax/vision_os
