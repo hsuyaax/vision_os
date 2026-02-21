@@ -65,10 +65,6 @@ class CameraManager:
             
             self.frame_count += 1
             
-            # Resize frame to 640x480 for consistent processing
-            if frame.shape[1] != 640 or frame.shape[0] != 480:
-                frame = cv2.resize(frame, (640, 480))
-            
             # Add to queue, drop old frames if full
             if self.frame_queue.full():
                 try:

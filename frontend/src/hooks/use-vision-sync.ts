@@ -22,7 +22,7 @@ export type Stats = Record<string, unknown>;
 
 export function useVisionSync() {
   const [connected, setConnected] = useState(false);
-  const [demoMode, setDemoMode] = useState(true);
+  const [demoMode, setDemoMode] = useState(false);
   const [vertical, setVertical] = useState("safety");
   const [feeding, setFeeding] = useState(false);
   const [stats, setStats] = useState<Stats>({});
@@ -116,9 +116,11 @@ export function useVisionSync() {
     }
   }, [demoMode, vertical, connectWs]);
 
-  // Startup connection check
+  // Startup connection check — auto-enable demo mode if backend is unreachable
   useEffect(() => {
-    checkConnection();
+    checkConnection().then((ok) => {
+      if (!ok) setDemoMode(true);
+    });
   }, [checkConnection]);
 
   // Start feed
@@ -129,7 +131,7 @@ export function useVisionSync() {
         return { status: "ok (demo)" };
       }
       const res = await api.startFeed(source, vertical);
-      if (res.status === "started") setFeeding(true);
+      if (res.status === "success" || res.status === "started") setFeeding(true);
       return res;
     },
     [demoMode, vertical]
@@ -142,7 +144,7 @@ export function useVisionSync() {
       return { status: "ok (demo)" };
     }
     const res = await api.stopFeed();
-    if (res.status === "stopped") setFeeding(false);
+    if (res.status === "success" || res.status === "stopped") setFeeding(false);
     return res;
   }, [demoMode]);
 

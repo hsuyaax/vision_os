@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useVS } from "@/components/providers";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -148,11 +148,7 @@ export default function MonitorPage() {
                   className="w-full h-full object-contain"
                 />
               ) : feeding && demoMode ? (
-                <div className="text-center text-white">
-                  <Video className="h-16 w-16 mx-auto mb-3 opacity-50 animate-pulse" />
-                  <p className="text-lg font-medium">Demo Mode Active</p>
-                  <p className="text-sm text-white/60">Simulated data is being generated</p>
-                </div>
+                <DemoVideoCanvas vertical={vertical} stats={s} />
               ) : (
                 <div className="text-center text-white/40">
                   <Camera className="h-16 w-16 mx-auto mb-3" />
@@ -264,5 +260,146 @@ function MetricRow({ icon: Icon, label, value }: { icon: React.ElementType; labe
       </div>
       <span className="text-sm font-medium">{value}</span>
     </div>
+  );
+}
+
+/* ── Simulated video canvas for demo mode ── */
+const VERTICAL_COLORS: Record<string, { bbox: string; bg: string; label: string }> = {
+  safety: { bbox: "#ff4444", bg: "#1a0a0a", label: "PPE" },
+  traffic: { bbox: "#00d4ff", bg: "#0a1218", label: "Vehicle" },
+  manufacturing: { bbox: "#ff6b35", bg: "#120e08", label: "Product" },
+  restaurant: { bbox: "#7b61ff", bg: "#0e0a18", label: "Person" },
+};
+
+const CLASSES: Record<string, string[]> = {
+  safety: ["person", "helmet", "vest", "no-helmet", "goggles"],
+  traffic: ["car", "truck", "bus", "motorcycle", "bicycle"],
+  manufacturing: ["product", "defect", "scratch", "good", "crack"],
+  restaurant: ["person", "chair", "table", "cup", "bottle"],
+};
+
+function DemoVideoCanvas({ vertical, stats }: { vertical: string; stats: Record<string, unknown> }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animRef = useRef<number>(0);
+  const boxesRef = useRef<Array<{ x: number; y: number; w: number; h: number; cls: string; conf: number; vx: number; vy: number }>>([]);
+  const frameRef = useRef(0);
+
+  // Initialize random boxes
+  useEffect(() => {
+    const count = 4 + Math.floor(Math.random() * 5);
+    boxesRef.current = Array.from({ length: count }, () => {
+      const classes = CLASSES[vertical] || CLASSES.safety;
+      return {
+        x: Math.random() * 500 + 30,
+        y: Math.random() * 300 + 30,
+        w: 40 + Math.random() * 60,
+        h: 50 + Math.random() * 80,
+        cls: classes[Math.floor(Math.random() * classes.length)],
+        conf: 0.6 + Math.random() * 0.38,
+        vx: (Math.random() - 0.5) * 1.2,
+        vy: (Math.random() - 0.5) * 0.8,
+      };
+    });
+  }, [vertical]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const vc = VERTICAL_COLORS[vertical] || VERTICAL_COLORS.safety;
+
+    const draw = () => {
+      const W = canvas.width;
+      const H = canvas.height;
+      frameRef.current++;
+
+      // Background with subtle noise
+      ctx.fillStyle = vc.bg;
+      ctx.fillRect(0, 0, W, H);
+
+      // Grid lines (simulated camera grid)
+      ctx.strokeStyle = "rgba(255,255,255,0.03)";
+      ctx.lineWidth = 1;
+      for (let x = 0; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+      for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+      // Scanline effect
+      const scanY = (frameRef.current * 2) % H;
+      ctx.fillStyle = "rgba(255,255,255,0.015)";
+      ctx.fillRect(0, scanY, W, 2);
+
+      // Move and draw bounding boxes
+      boxesRef.current.forEach((b) => {
+        b.x += b.vx;
+        b.y += b.vy;
+        if (b.x < 10 || b.x + b.w > W - 10) b.vx *= -1;
+        if (b.y < 10 || b.y + b.h > H - 10) b.vy *= -1;
+        b.x = Math.max(10, Math.min(W - b.w - 10, b.x));
+        b.y = Math.max(10, Math.min(H - b.h - 10, b.y));
+
+        // Slightly vary confidence
+        b.conf = Math.max(0.5, Math.min(0.99, b.conf + (Math.random() - 0.5) * 0.02));
+
+        // Bounding box
+        ctx.strokeStyle = vc.bbox;
+        ctx.lineWidth = 2;
+        ctx.strokeRect(b.x, b.y, b.w, b.h);
+
+        // Corner accents
+        const corner = 8;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(b.x, b.y + corner); ctx.lineTo(b.x, b.y); ctx.lineTo(b.x + corner, b.y);
+        ctx.moveTo(b.x + b.w - corner, b.y); ctx.lineTo(b.x + b.w, b.y); ctx.lineTo(b.x + b.w, b.y + corner);
+        ctx.moveTo(b.x + b.w, b.y + b.h - corner); ctx.lineTo(b.x + b.w, b.y + b.h); ctx.lineTo(b.x + b.w - corner, b.y + b.h);
+        ctx.moveTo(b.x + corner, b.y + b.h); ctx.lineTo(b.x, b.y + b.h); ctx.lineTo(b.x, b.y + b.h - corner);
+        ctx.stroke();
+
+        // Label background
+        const label = `${b.cls} ${(b.conf * 100).toFixed(0)}%`;
+        ctx.font = "bold 10px monospace";
+        const tw = ctx.measureText(label).width + 8;
+        ctx.fillStyle = vc.bbox;
+        ctx.fillRect(b.x, b.y - 16, tw, 16);
+        ctx.fillStyle = "#fff";
+        ctx.fillText(label, b.x + 4, b.y - 4);
+      });
+
+      // Top-left overlay: timestamp
+      const ts = new Date().toLocaleTimeString();
+      ctx.font = "bold 11px monospace";
+      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.fillRect(8, 8, 170, 22);
+      ctx.fillStyle = "#00ff88";
+      ctx.fillText(`● REC  ${ts}  F:${frameRef.current}`, 14, 23);
+
+      // Bottom-left: vertical indicator
+      ctx.fillStyle = "rgba(0,0,0,0.6)";
+      ctx.fillRect(8, H - 30, 140, 22);
+      ctx.fillStyle = vc.bbox;
+      ctx.fillText(`▸ ${vertical.toUpperCase()} MODE`, 14, H - 13);
+
+      // Noise particles
+      for (let i = 0; i < 15; i++) {
+        ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.03})`;
+        ctx.fillRect(Math.random() * W, Math.random() * H, 2, 2);
+      }
+
+      animRef.current = requestAnimationFrame(draw);
+    };
+
+    draw();
+    return () => cancelAnimationFrame(animRef.current);
+  }, [vertical]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={640}
+      height={480}
+      className="w-full h-full object-contain"
+    />
   );
 }

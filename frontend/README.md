@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VisionSync Frontend
+
+The web dashboard for VisionSync — providing real-time monitoring, analytics, and alert management for AI-powered surveillance.
+
+## Tech Stack
+
+| Technology | Purpose |
+|------------|---------|
+| **Next.js 16** | React framework with App Router |
+| **React 19** | UI components |
+| **TypeScript** | Type safety |
+| **Tailwind CSS v4** | Styling |
+| **shadcn/ui** | Component library |
+| **Recharts** | Data visualization |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- npm 9+
+
+### Installation
+
+```bash
+npm install
+```
+
+### Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) — the app starts in **Demo Mode** by default.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Production Build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm start
+```
 
-## Learn More
+## Project Structure
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+├── app/                  # Next.js App Router pages
+│   ├── page.tsx          # Dashboard (home)
+│   ├── monitor/          # Live camera feed monitoring
+│   ├── analytics/        # Charts & event logs
+│   ├── alerts/           # Alert timeline
+│   └── settings/         # Configuration
+├── components/
+│   ├── ui/               # shadcn/ui components
+│   ├── app-shell.tsx     # Main layout wrapper
+│   └── sidebar.tsx       # Navigation sidebar
+├── hooks/
+│   └── use-vision-sync.ts # WebSocket & state management
+└── lib/
+    ├── api.ts            # Backend API client
+    ├── demo-data.ts      # Demo mode data generation
+    └── utils.ts          # Utility functions
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Pages
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Route | Description |
+|-------|-------------|
+| `/` | Dashboard with real-time stats, detection trends, and activity feed |
+| `/monitor` | Live video feed with MJPEG streaming and detection overlays |
+| `/analytics` | Charts (trends, FPS, severity) and searchable events log |
+| `/alerts` | Filterable alert timeline with severity badges |
+| `/settings` | Backend connection, vertical selection, demo mode toggle |
 
-## Deploy on Vercel
+## Demo Mode
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The app runs in demo mode when enabled in Settings, simulating:
+- Live detection statistics
+- Animated canvas feed
+- Real-time alert generation
+- Historical analytics data
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+No backend connection required to explore the full UI.
+
+## Connecting to Backend
+
+1. Start the backend: `cd backend && python main.py`
+2. Open Settings → Disable Demo Mode
+3. Test Connection → should show "Connected"
+4. Navigate to Monitor → Start camera feed
+
+Backend API: `http://localhost:8000`  
+WebSocket: `ws://localhost:8000/ws`
