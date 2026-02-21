@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VisionSync — Build Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --bg: #0c0c14;
+  --s1: #13131f;
+  --s2: #1c1c2e;
+  --border: #2a2a40;
+  --text: #e4e4f0;
+  --muted: #5a5a7a;
+  --green: #00d97e;
+  --orange: #ff7040;
+  --blue: #38b6ff;
+  --purple: #a78bfa;
+  --red: #f87171;
+  --yellow: #fbbf24;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* HEADER */
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 1.5rem;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(12,12,20,0.95);
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(8px);
+}
+
+.logo {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--green);
+  letter-spacing: 2px;
+}
+
+.progress-summary {
+  display: flex; align-items: center; gap: 1.5rem;
+  font-size: 0.8rem;
+}
+
+.prog-item { display: flex; align-items: center; gap: 0.4rem; }
+.prog-num { font-family: 'Space Mono', monospace; font-size: 0.9rem; font-weight: 700; }
+.prog-lbl { color: var(--muted); }
+
+.overall-bar {
+  width: 120px; height: 4px;
+  background: var(--border);
+  border-radius: 2px; overflow: hidden;
+}
+.overall-fill {
+  height: 100%; background: var(--green);
+  border-radius: 2px; transition: width 0.3s;
+}
+
+/* TABS */
+.tabs {
+  display: flex; gap: 0; padding: 1rem 1.5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab {
+  padding: 0.5rem 1.1rem;
+  font-size: 0.78rem; font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--green); border-color: var(--green); }
+
+/* MAIN CONTENT */
+.view { display: none; padding: 1.5rem; }
+.view.active { display: block; }
+
+/* KANBAN */
+.kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+
+.col-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.col-title {
+  font-size: 0.7rem; font-weight: 700;
+  font-family: 'Space Mono', monospace;
+  letter-spacing: 2px; text-transform: uppercase;
+}
+
+.col-count {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  background: var(--s2);
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
+  color: var(--muted);
+}
+
+.kanban-col { min-height: 200px; }
+
+.task-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.task-card:hover { border-color: var(--green); transform: translateY(-1px); }
+.task-card.done { opacity: 0.5; }
+.task-card.done .task-title { text-decoration: line-through; }
+
+.task-tags { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-bottom: 0.4rem; }
+
+.tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.55rem; letter-spacing: 1px;
+  padding: 0.15rem 0.45rem; border-radius: 3px;
+  font-weight: 700;
+}
+
+.tag-core { background: rgba(0,217,126,0.15); color: var(--green); border: 1px solid rgba(0,217,126,0.3); }
+.tag-safety { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+.tag-traffic { background: rgba(56,182,255,0.15); color: var(--blue); border: 1px solid rgba(56,182,255,0.3); }
+.tag-mfg { background: rgba(255,112,64,0.15); color: var(--orange); border: 1px solid rgba(255,112,64,0.3); }
+.tag-resto { background: rgba(167,139,250,0.15); color: var(--purple); border: 1px solid rgba(167,139,250,0.3); }
+.tag-ui { background: rgba(251,191,36,0.15); color: var(--yellow); border: 1px solid rgba(251,191,36,0.3); }
+.tag-must { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+.tag-should { background: rgba(251,191,36,0.15); color: var(--yellow); border: 1px solid rgba(251,191,36,0.3); }
+
+.task-title { font-size: 0.8rem; font-weight: 600; line-height: 1.3; margin-bottom: 0.3rem; }
+.task-meta { font-size: 0.68rem; color: var(--muted); display: flex; align-items: center; gap: 0.5rem; }
+.task-hour { font-family: 'Space Mono', monospace; }
+
+/* CHECKLIST VIEW */
+.phase-group { margin-bottom: 2rem; }
+
+.phase-header {
+  display: flex; align-items: center; gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.phase-title { font-size: 1rem; font-weight: 700; }
+.phase-time { font-family: 'Space Mono', monospace; font-size: 0.7rem; color: var(--muted); }
+.phase-prog { font-family: 'Space Mono', monospace; font-size: 0.7rem; margin-left: auto; }
+
+.phase-bar { width: 80px; height: 3px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.phase-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+
+.check-item {
+  display: flex; align-items: flex-start; gap: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  border-radius: 5px;
+  margin-bottom: 0.3rem;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+.check-item:hover { background: var(--s2); }
+
+.check-box {
+  width: 18px; height: 18px; border-radius: 4px;
+  border: 2px solid var(--border);
+  flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.15s;
+}
+.check-item.checked .check-box {
+  background: var(--green); border-color: var(--green);
+}
+.check-item.checked .check-box::after { content: '✓'; font-size: 0.7rem; color: #000; font-weight: 700; }
+.check-item.checked .check-text { text-decoration: line-through; color: var(--muted); }
+
+.check-text { font-size: 0.82rem; line-height: 1.4; flex: 1; }
+.check-sub { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; }
+.check-tags { display: flex; gap: 0.3rem; flex-wrap: wrap; margin-top: 0.3rem; }
+
+/* TIMELINE VIEW */
+.timeline-grid { display: grid; grid-template-columns: 80px 1fr; gap: 0; }
+
+.tl-time {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem; color: var(--muted);
+  padding: 0 1rem 1.5rem 0;
+  text-align: right;
+  position: relative;
+}
+.tl-time::after {
+  content: '';
+  position: absolute; right: -1px; top: 6px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--border); border: 2px solid var(--bg);
+}
+
+.tl-block {
+  border-left: 1px solid var(--border);
+  padding: 0 0 1.5rem 1.5rem;
+}
+
+.tl-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+}
+
+.tl-card-title { font-size: 0.88rem; font-weight: 700; margin-bottom: 0.4rem; }
+.tl-card-body { font-size: 0.75rem; color: var(--muted); line-height: 1.5; margin-bottom: 0.5rem; }
+.tl-items { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.tl-item {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.58rem;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 3px; color: var(--muted);
+}
+
+/* RISKS VIEW */
+.risk-card {
+  background: var(--s1);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1rem 1.2rem;
+  margin-bottom: 0.75rem;
+  display: grid;
+  grid-template-columns: 1fr 80px 80px 2fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.risk-name { font-size: 0.82rem; font-weight: 600; }
+.risk-lbl { font-family: 'Space Mono', monospace; font-size: 0.6rem; color: var(--muted); margin-top: 0.2rem; }
+
+.risk-badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem; font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.risk-h { background: rgba(248,113,113,0.15); color: var(--red); border: 1px solid rgba(248,113,113,0.3); }
+.risk-m { background: rgba(251,191,36,0.15); color: var(--yellow); border: 1px solid rgba(251,191,36,0.3); }
+.risk-l { background: rgba(0,217,126,0.15); color: var(--green); border: 1px solid rgba(0,217,126,0.3); }
+
+.risk-mitigation { font-size: 0.75rem; color: var(--muted); line-height: 1.5; }
+
+/* CONFIG VIEW */
+.config-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.config-section { background: var(--s1); border: 1px solid var(--border); border-radius: 8px; padding: 1.2rem; }
+.config-title { font-size: 0.8rem; font-weight: 700; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+.config-code {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.68rem;
+  line-height: 1.8;
+  color: var(--green);
+  background: var(--s2);
+  padding: 0.75rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* UTIL */
+.section-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.section-title { font-size: 1rem; font-weight: 700; }
+.section-sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+@media (max-width: 900px) {
+  .kanban { grid-template-columns: 1fr 1fr; }
+  .risk-card { grid-template-columns: 1fr; }
+  .config-grid { grid-template-columns: 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">// VISIONSYNC BUILD TRACKER</div>
+  <div class="progress-summary">
+    <div class="prog-item">
+      <span class="prog-num green" id="done-count" style="color:var(--green)">0</span>
+      <span class="prog-lbl">done</span>
+    </div>
+    <div class="prog-item">
+      <span class="prog-num" id="total-count" style="color:var(--muted)">0</span>
+      <span class="prog-lbl">total</span>
+    </div>
+    <div>
+      <div style="font-family:'Space Mono',monospace;font-size:0.65rem;color:var(--muted);margin-bottom:4px" id="pct-lbl">0% complete</div>
+      <div class="overall-bar"><div class="overall-fill" id="overall-fill" style="width:0%"></div></div>
+    </div>
+  </div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('kanban', this)">Kanban Board</div>
+  <div class="tab" onclick="switchTab('checklist', this)">Build Checklist</div>
+  <div class="tab" onclick="switchTab('timeline', this)">12hr Timeline</div>
+  <div class="tab" onclick="switchTab('risks', this)">Risks</div>
+  <div class="tab" onclick="switchTab('config', this)">Config & Setup</div>
+</div>
+
+<!-- ====== KANBAN ====== -->
+<div id="view-kanban" class="view active">
+  <div class="kanban" id="kanban-board"></div>
+</div>
+
+<!-- ====== CHECKLIST ====== -->
+<div id="view-checklist" class="view">
+  <div id="checklist-container"></div>
+</div>
+
+<!-- ====== TIMELINE ====== -->
+<div id="view-timeline" class="view">
+  <div class="section-header">
+    <div>
+      <div class="section-title">12-Hour Build Timeline</div>
+      <div class="section-sub">Ordered execution plan for a solo developer</div>
+    </div>
+  </div>
+  <div class="timeline-grid" id="timeline-container"></div>
+</div>
+
+<!-- ====== RISKS ====== -->
+<div id="view-risks" class="view">
+  <div class="section-header">
+    <div>
+      <div class="section-title">Risk Register</div>
+      <div class="section-sub">Known risks with mitigations — review before starting</div>
+    </div>
+  </div>
+  <div id="risks-container"></div>
+</div>
+
+<!-- ====== CONFIG ====== -->
+<div id="view-config" class="view">
+  <div class="section-header">
+    <div class="section-title">Setup Commands & Config Reference</div>
+  </div>
+  <div class="config-grid" id="config-container"></div>
+</div>
+
+<script>
+// ===== DATA =====
+const TASKS = [
+  // --- SETUP ---
+  { id:'T001', title:'Install all Python packages', phase:'Setup', col:'todo', priority:'MUST', vertical:'core', hour:'0:00', detail:'pip install ultralytics supervision fastapi uvicorn opencv-python-headless huggingface_hub python-multipart websockets' },
+  { id:'T002', title:'Test YOLOv8n.pt model download', phase:'Setup', col:'todo', priority:'MUST', vertical:'core', hour:'0:15', detail:'python -c "from ultralytics import YOLO; YOLO(\'yolov8n.pt\')"' },
+  { id:'T003', title:'Create folder structure', phase:'Setup', col:'todo', priority:'MUST', vertical:'core', hour:'0:20', detail:'mkdir -p backend/logic backend/models frontend demo' },
+  { id:'T004', title:'Download demo video files', phase:'Setup', col:'todo', priority:'MUST', vertical:'core', hour:'0:25', detail:'Download safety, traffic, restaurant .mp4 from Pexels/YouTube' },
+  { id:'T005', title:'Create config.json with defaults', phase:'Setup', col:'todo', priority:'MUST', vertical:'core', hour:'0:30', detail:'Copy config template from Tech Spec Section 6.2' },
+
+  // --- BACKEND CORE ---
+  { id:'T006', title:'Write camera_manager.py', phase:'Backend Core', col:'todo', priority:'MUST', vertical:'core', hour:'0:30', detail:'VideoCapture thread + Queue(maxsize=2). Test: camera.get_frame() returns numpy array' },
+  { id:'T007', title:'Write db.py — SQLite schema + helpers', phase:'Backend Core', col:'todo', priority:'MUST', vertical:'core', hour:'1:00', detail:'init_db(), get_events() with filters. Test: sqlite3 events.db works' },
+  { id:'T008', title:'Write alert_manager.py', phase:'Backend Core', col:'todo', priority:'MUST', vertical:'core', hour:'1:30', detail:'trigger() with cooldown, _persist(), _broadcast() subscriber list' },
+  { id:'T009', title:'Write inference_engine.py skeleton', phase:'Backend Core', col:'todo', priority:'MUST', vertical:'core', hour:'2:00', detail:'load_module(), generate_frames() MJPEG generator, get_stats()' },
+  { id:'T010', title:'Write main.py FastAPI app', phase:'Backend Core', col:'todo', priority:'MUST', vertical:'core', hour:'2:30', detail:'All routes: /api/feed/start, /stream, /ws/stats, /ws/alerts' },
+  { id:'T011', title:'Test: uvicorn start + /stream endpoint', phase:'Backend Core', col:'todo', priority:'MUST', vertical:'core', hour:'3:00', detail:'Open http://localhost:8000/stream in browser — see annotated video' },
+
+  // --- SAFETY VERTICAL ---
+  { id:'T012', title:'Write logic/base.py abstract class', phase:'Safety Vertical', col:'todo', priority:'MUST', vertical:'core', hour:'3:00', detail:'BaseModule with abstract process() and get_stats()' },
+  { id:'T013', title:'Download PPE model weights', phase:'Safety Vertical', col:'todo', priority:'MUST', vertical:'safety', hour:'3:15', detail:'YOLO("keremberke/yolov8m-hard-hat-detection") — may take a few minutes' },
+  { id:'T014', title:'Write logic/safety.py — PPE detection', phase:'Safety Vertical', col:'todo', priority:'MUST', vertical:'safety', hour:'3:30', detail:'Detect helmet/no-helmet per person, trigger PPE_VIOLATION_HELMET alert' },
+  { id:'T015', title:'Add zone polygon check to safety.py', phase:'Safety Vertical', col:'todo', priority:'MUST', vertical:'safety', hour:'4:00', detail:'sv.PolygonZone, person centroid in zone → ZONE_BREACH alert' },
+  { id:'T016', title:'Test safety vertical end-to-end', phase:'Safety Vertical', col:'todo', priority:'MUST', vertical:'safety', hour:'4:30', detail:'Load safety_demo.mp4, see PPE bounding boxes + alert in ws/alerts' },
+
+  // --- TRAFFIC VERTICAL ---
+  { id:'T017', title:'Write logic/traffic.py', phase:'Traffic Vertical', col:'todo', priority:'MUST', vertical:'traffic', hour:'4:30', detail:'ByteTrack + LineZone vehicle counter, queue ROI count' },
+  { id:'T018', title:'Test traffic counting on video', phase:'Traffic Vertical', col:'todo', priority:'MUST', vertical:'traffic', hour:'5:30', detail:'Vehicle count increments, queue length shown, CONGESTION alert fires' },
+
+  // --- RESTAURANT VERTICAL ---
+  { id:'T019', title:'Write logic/restaurant.py', phase:'Restaurant Vertical', col:'todo', priority:'MUST', vertical:'resto', hour:'5:30', detail:'Reuse tracker from traffic, add entry_times dict for dwell calculation' },
+  { id:'T020', title:'Test restaurant occupancy tracking', phase:'Restaurant Vertical', col:'todo', priority:'MUST', vertical:'resto', hour:'6:30', detail:'Table count, queue length, avg dwell updating in stats' },
+
+  // --- MANUFACTURING VERTICAL ---
+  { id:'T021', title:'Write logic/manufacturing.py', phase:'Manufacturing Vertical', col:'todo', priority:'MUST', vertical:'mfg', hour:'6:30', detail:'YOLOv8 defect detection OR cv2 contour fallback if model unavailable' },
+  { id:'T022', title:'Test manufacturing on sample video', phase:'Manufacturing Vertical', col:'todo', priority:'MUST', vertical:'mfg', hour:'7:00', detail:'Defect count increments, pass rate calculates, DEFECT_DETECTED fires' },
+
+  // --- FRONTEND ---
+  { id:'T023', title:'Build index.html base layout', phase:'Frontend', col:'todo', priority:'MUST', vertical:'ui', hour:'7:00', detail:'Topbar, sidebar, stat cards, video feed <img>, alert panel, vertical buttons' },
+  { id:'T024', title:'Write dashboard.js WebSocket client', phase:'Frontend', col:'todo', priority:'MUST', vertical:'ui', hour:'7:30', detail:'connectWebSockets(), updateStats(), addAlert(), startFeed() functions' },
+  { id:'T025', title:'Connect video stream to <img> src', phase:'Frontend', col:'todo', priority:'MUST', vertical:'ui', hour:'8:00', detail:'document.getElementById("video-feed").src = "http://localhost:8000/stream"' },
+  { id:'T026', title:'Build Feed Setup screen', phase:'Frontend', col:'todo', priority:'MUST', vertical:'ui', hour:'8:15', detail:'Source type picker, vertical selector, preview, Start Detection button' },
+  { id:'T027', title:'Build Analytics screen', phase:'Frontend', col:'todo', priority:'SHOULD', vertical:'ui', hour:'8:45', detail:'Chart.js line chart for detections over time + event log table' },
+  { id:'T028', title:'Add Chart.js from CDN', phase:'Frontend', col:'todo', priority:'SHOULD', vertical:'ui', hour:'9:15', detail:'<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>' },
+  { id:'T029', title:'Test all 4 vertical switches in UI', phase:'Frontend', col:'todo', priority:'MUST', vertical:'ui', hour:'9:30', detail:'Each button triggers POST /api/feed/start with correct vertical param' },
+
+  // --- EVENT LOG ---
+  { id:'T030', title:'Wire GET /api/alerts to event log table', phase:'Polish', col:'todo', priority:'MUST', vertical:'core', hour:'9:30', detail:'Fetch alerts on load, render in table sorted by timestamp desc' },
+
+  // --- DEMO PREP ---
+  { id:'T031', title:'Test all 4 verticals with demo videos', phase:'Demo Prep', col:'todo', priority:'MUST', vertical:'core', hour:'10:30', detail:'Cycle through each vertical using demo .mp4 files, confirm alerts fire cleanly' },
+  { id:'T032', title:'Tune confidence thresholds in config.json', phase:'Demo Prep', col:'todo', priority:'MUST', vertical:'core', hour:'11:00', detail:'Adjust thresholds.confidence to reduce false positives without missing real events' },
+  { id:'T033', title:'Take screenshots for presentation deck', phase:'Demo Prep', col:'todo', priority:'SHOULD', vertical:'ui', hour:'11:15', detail:'Capture: live feed with annotations, alert panel with alerts, analytics chart' },
+  { id:'T034', title:'Write 2-minute demo script', phase:'Demo Prep', col:'todo', priority:'MUST', vertical:'core', hour:'11:30', detail:'Hook → Safety demo → Traffic demo → Architecture point → Analytics → Close' },
+  { id:'T035', title:'Final rehearsal run-through', phase:'Demo Prep', col:'todo', priority:'MUST', vertical:'core', hour:'11:45', detail:'Full 2-min demo from cold start. Time it. Confirm no crashes.' },
+];
+
+const PHASES = {
+  'Setup': { color: 'var(--green)', emoji: '🔧' },
+  'Backend Core': { color: 'var(--blue)', emoji: '⚙️' },
+  'Safety Vertical': { color: 'var(--red)', emoji: '🦺' },
+  'Traffic Vertical': { color: 'var(--blue)', emoji: '🚦' },
+  'Restaurant Vertical': { color: 'var(--purple)', emoji: '🍽️' },
+  'Manufacturing Vertical': { color: 'var(--orange)', emoji: '🏭' },
+  'Frontend': { color: 'var(--yellow)', emoji: '🖥️' },
+  'Polish': { color: 'var(--green)', emoji: '✨' },
+  'Demo Prep': { color: 'var(--green)', emoji: '🎯' },
+};
+
+const RISKS = [
+  { name:'PPE model unavailable or slow download', likelihood:'LOW', impact:'HIGH', mitigation:'Pre-download before hackathon. Use yolov8n.pt COCO person as fallback + manual rule "no helmet class detected = violation".' },
+  { name:'No GPU — inference too slow for live webcam', likelihood:'MEDIUM', impact:'HIGH', mitigation:'Use demo .mp4 video at 1x speed. YOLOv8n runs 8-12 FPS on CPU which is fine for demo. Add this note in the pitch as "runs on any hardware".' },
+  { name:'Manufacturing defect model too generic', likelihood:'MEDIUM', impact:'MEDIUM', mitigation:'Use OpenCV contour + edge detection as visible fallback. Label in UI as "CV Rule-based Mode" — judges respect the honesty and the backup plan.' },
+  { name:'RTSP stream unavailable during demo', likelihood:'HIGH', impact:'MEDIUM', mitigation:'NEVER rely on RTSP for demo. Always use local .mp4 file. RTSP is listed as a feature but not demonstrated live.' },
+  { name:'WebSocket drops or alerts not firing', likelihood:'LOW', impact:'MEDIUM', mitigation:'Implement auto-reconnect (setTimeout on ws.onclose). Pre-test on the demo machine 30 mins before presenting.' },
+  { name:'Time overrun — not all verticals done', likelihood:'MEDIUM', impact:'HIGH', mitigation:'Build order: Safety → Traffic → Restaurant → Manufacturing. First two are enough to win. Each extra vertical is bonus.' },
+  { name:'Alert spam flooding the UI', likelihood:'MEDIUM', impact:'LOW', mitigation:'Cooldown system in alert_manager.py. Set cooldowns conservatively (10-30s). Lower confidence threshold to 0.7 to reduce false positives.' },
+];
+
+const CONFIG_BLOCKS = [
+  { title: '📦 Install All Dependencies', code: `pip install ultralytics supervision fastapi uvicorn \\
+    opencv-python-headless huggingface_hub \\
+    anomalib python-multipart websockets` },
+  { title: '🧪 Test Base Model', code: `python -c "
+from ultralytics import YOLO
+model = YOLO('yolov8n.pt')
+print('Model params:', sum(p.numel() for p in model.model.parameters()))
+print('✓ Base model ready')
+"` },
+  { title: '🦺 Load PPE Model', code: `python -c "
+from ultralytics import YOLO
+model = YOLO('keremberke/yolov8m-hard-hat-detection')
+print('✓ PPE model ready')
+"` },
+  { title: '▶️ Start Backend', code: `cd backend
+uvicorn main:app --reload \\
+  --host 0.0.0.0 --port 8000` },
+  { title: '🔌 Test API Endpoints', code: `# Start feed
+curl -X POST localhost:8000/api/feed/start \\
+  -H "Content-Type: application/json" \\
+  -d '{"source":"../demo/safety_demo.mp4","vertical":"safety"}'
+
+# Get stats
+curl localhost:8000/api/stats` },
+  { title: '📡 Test WebSocket', code: `# In browser console:
+const ws = new WebSocket('ws://localhost:8000/ws/stats');
+ws.onmessage = (e) => console.log(JSON.parse(e.data));` },
+  { title: '🎬 Loop Demo Video', code: `# In camera_manager.py _capture_loop:
+if not ret:
+    # Loop back to start of video
+    self._cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+    continue` },
+  { title: '⚙️ config.json (minimum)', code: `{
+  "camera": {
+    "source": "../demo/safety_demo.mp4",
+    "fps_limit": 30,
+    "frame_size": [640, 480]
+  },
+  "thresholds": {
+    "confidence": 0.65,
+    "queue_max": 6
+  },
+  "zones": []
+}` },
+];
+
+const TIMELINE = [
+  { time:'H 0:00\nH 0:30', title:'Environment Setup', body:'Install packages, download model, create folder structure, test YOLOv8 runs.', items:['pip install', 'YOLO("yolov8n.pt")', 'mkdir structure', 'download demos'] },
+  { time:'H 0:30\nH 3:00', title:'Backend Core', body:'camera_manager.py → db.py → alert_manager.py → inference_engine.py → main.py → test /stream', items:['camera_manager.py', 'db.py', 'alert_manager.py', 'inference_engine.py', 'main.py', '/stream test ✓'] },
+  { time:'H 3:00\nH 4:30', title:'Safety Vertical ⭐ Priority 1', body:'Download PPE model, write safety.py with PPE detection + zone breach. This is your best demo vertical.', items:['logic/base.py', 'PPE model download', 'logic/safety.py', 'zone check', 'end-to-end test ✓'] },
+  { time:'H 4:30\nH 5:30', title:'Traffic Vertical', body:'ByteTrack + LineZone from supervision. Reuse yolov8n.pt. Vehicle counting + queue length.', items:['logic/traffic.py', 'ByteTrack', 'LineZone', 'queue ROI', 'test ✓'] },
+  { time:'H 5:30\nH 7:00', title:'Restaurant + Manufacturing', body:'Restaurant reuses traffic logic + adds dwell time. Manufacturing: defect model or cv2 contour fallback.', items:['logic/restaurant.py', 'dwell timer', 'logic/manufacturing.py', 'both tested ✓'] },
+  { time:'H 7:00\nH 9:30', title:'Frontend Dashboard', body:'Build index.html, dashboard.js WebSocket client, analytics screen with Chart.js.', items:['index.html layout', 'dashboard.js', 'WebSocket client', 'Feed Setup screen', 'Analytics + Chart.js', 'vertical switching ✓'] },
+  { time:'H 9:30\nH 10:30', title:'Event Log + API Wiring', body:'Wire GET /api/alerts to event log table in UI. Confirm SQLite persistence.', items:['event log table', 'GET /api/alerts', 'filter by vertical', 'SQLite verified ✓'] },
+  { time:'H 10:30\nH 12:00', title:'Demo Prep & Polish', body:'Test all 4 verticals with demo videos, tune thresholds, screenshot for deck, rehearse demo script.', items:['all 4 verticals ✓', 'threshold tuning', 'screenshots', '2-min script', 'rehearsal ✓'] },
+];
+
+// ===== STATE =====
+let taskState = {};
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('vs_tasks');
+    if (saved) taskState = JSON.parse(saved);
+  } catch(e) {}
+}
+
+function saveState() {
+  try { localStorage.setItem('vs_tasks', JSON.stringify(taskState)); } catch(e) {}
+}
+
+function toggleTask(id) {
+  taskState[id] = !taskState[id];
+  saveState();
+  render();
+}
+
+function isDone(id) { return !!taskState[id]; }
+
+function render() {
+  const done = TASKS.filter(t => isDone(t.id)).length;
+  const total = TASKS.length;
+  const pct = Math.round(done / total * 100);
+  document.getElementById('done-count').textContent = done;
+  document.getElementById('total-count').textContent = total;
+  document.getElementById('pct-lbl').textContent = pct + '% complete';
+  document.getElementById('overall-fill').style.width = pct + '%';
+
+  renderKanban();
+  renderChecklist();
+}
+
+function renderKanban() {
+  const cols = { todo: [], inprogress: [], done: [] };
+  TASKS.forEach(t => {
+    const col = isDone(t.id) ? 'done' : (taskState[t.id + '_active'] ? 'inprogress' : 'todo');
+    cols[col].push(t);
+  });
+
+  const colDefs = [
+    { key: 'todo', label: 'To Do', color: 'var(--muted)' },
+    { key: 'inprogress', label: 'In Progress', color: 'var(--yellow)' },
+    { key: 'done', label: 'Done', color: 'var(--green)' },
+  ];
+
+  // Show all tasks in a 3-col view + priority column
+  const phaseGroups = {};
+  TASKS.forEach(t => {
+    if (!phaseGroups[t.phase]) phaseGroups[t.phase] = [];
+    phaseGroups[t.phase].push(t);
+  });
+
+  const board = document.getElementById('kanban-board');
+  // Use phase-based columns for better visibility
+  const phaseKeys = Object.keys(PHASES);
+  board.style.gridTemplateColumns = `repeat(${Math.min(phaseKeys.length, 4)}, 1fr)`;
+
+  const firstFour = phaseKeys.slice(0, 4);
+  board.innerHTML = firstFour.map(phase => {
+    const tasks = phaseGroups[phase] || [];
+    const doneCnt = tasks.filter(t => isDone(t.id)).length;
+    return `
+      <div class="kanban-col">
+        <div class="col-header">
+          <div class="col-title" style="color:${PHASES[phase].color}">${PHASES[phase].emoji} ${phase}</div>
+          <div class="col-count">${doneCnt}/${tasks.length}</div>
+        </div>
+        ${tasks.map(t => `
+          <div class="task-card ${isDone(t.id) ? 'done' : ''}" onclick="toggleTask('${t.id}')">
+            <div class="task-tags">
+              <span class="tag tag-${t.vertical}">${t.vertical.toUpperCase()}</span>
+              <span class="tag ${t.priority === 'MUST' ? 'tag-must' : 'tag-should'}">${t.priority}</span>
+            </div>
+            <div class="task-title">${t.title}</div>
+            <div class="task-meta">
+              <span class="task-hour">⏱ ${t.hour}</span>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderChecklist() {
+  const phaseGroups = {};
+  TASKS.forEach(t => {
+    if (!phaseGroups[t.phase]) phaseGroups[t.phase] = [];
+    phaseGroups[t.phase].push(t);
+  });
+
+  const container = document.getElementById('checklist-container');
+  container.innerHTML = Object.entries(phaseGroups).map(([phase, tasks]) => {
+    const done = tasks.filter(t => isDone(t.id)).length;
+    const pct = Math.round(done / tasks.length * 100);
+    const { color, emoji } = PHASES[phase];
+    return `
+      <div class="phase-group">
+        <div class="phase-header">
+          <span style="font-size:1.1rem">${emoji}</span>
+          <div class="phase-title">${phase}</div>
+          <div class="phase-time">${tasks[0].hour} — ${tasks[tasks.length-1].hour}</div>
+          <div style="display:flex;align-items:center;gap:0.6rem;margin-left:auto">
+            <div class="phase-bar"><div class="phase-fill" style="width:${pct}%;background:${color}"></div></div>
+            <div class="phase-prog" style="color:${color}">${done}/${tasks.length}</div>
+          </div>
+        </div>
+        ${tasks.map(t => `
+          <div class="check-item ${isDone(t.id) ? 'checked' : ''}" onclick="toggleTask('${t.id}')">
+            <div class="check-box"></div>
+            <div>
+              <div class="check-text">${t.title}</div>
+              <div class="check-sub">${t.detail}</div>
+              <div class="check-tags">
+                <span class="tag tag-${t.vertical}" style="margin-top:4px">${t.vertical.toUpperCase()}</span>
+                <span class="tag ${t.priority === 'MUST' ? 'tag-must' : 'tag-should'}" style="margin-top:4px">${t.priority}</span>
+                <span class="tag" style="margin-top:4px;border-color:var(--border);color:var(--muted)">⏱ ${t.hour}</span>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderTimeline() {
+  const container = document.getElementById('timeline-container');
+  container.innerHTML = TIMELINE.map(step => `
+    <div class="tl-time">${step.time}</div>
+    <div class="tl-block">
+      <div class="tl-card">
+        <div class="tl-card-title">${step.title}</div>
+        <div class="tl-card-body">${step.body}</div>
+        <div class="tl-items">
+          ${step.items.map(i => `<span class="tl-item">${i}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderRisks() {
+  const container = document.getElementById('risks-container');
+  container.innerHTML = RISKS.map(r => {
+    const lClass = { LOW: 'risk-l', MEDIUM: 'risk-m', HIGH: 'risk-h' };
+    return `
+      <div class="risk-card">
+        <div>
+          <div class="risk-name">${r.name}</div>
+        </div>
+        <div>
+          <div class="risk-lbl">LIKELIHOOD</div>
+          <span class="risk-badge ${lClass[r.likelihood]}">${r.likelihood}</span>
+        </div>
+        <div>
+          <div class="risk-lbl">IMPACT</div>
+          <span class="risk-badge ${lClass[r.impact]}">${r.impact}</span>
+        </div>
+        <div class="risk-mitigation">✓ ${r.mitigation}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderConfig() {
+  const container = document.getElementById('config-container');
+  container.innerHTML = CONFIG_BLOCKS.map(b => `
+    <div class="config-section">
+      <div class="config-title">${b.title}</div>
+      <div class="config-code">${b.code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+    </div>
+  `).join('');
+}
+
+// ===== TAB SWITCHING =====
+function switchTab(name, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+// ===== INIT =====
+loadState();
+render();
+renderTimeline();
+renderRisks();
+renderConfig();
+</script>
+</body>
+</html>

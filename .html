@@ -1,0 +1,1821 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VisionSync — Architecture & Wireframes</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a3a;
+    --accent: #00ff88;
+    --accent2: #ff6b35;
+    --accent3: #7b61ff;
+    --accent4: #00d4ff;
+    --text: #e8e8f0;
+    --muted: #666680;
+    --danger: #ff4444;
+    --warn: #ffaa00;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(10,10,15,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex; align-items: center; gap: 2rem;
+    height: 56px;
+  }
+
+  .nav-logo {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.85rem;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .nav-tabs {
+    display: flex; gap: 0.25rem; overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+
+  .nav-tab {
+    padding: 0.35rem 0.9rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--muted);
+    background: none;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-tab:hover { color: var(--text); border-color: var(--border); }
+  .nav-tab.active { color: var(--accent); border-color: var(--accent); background: rgba(0,255,136,0.07); }
+
+  /* SECTIONS */
+  section { display: none; padding: 80px 0 4rem; min-height: 100vh; }
+  section.active { display: block; }
+
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+
+  /* HERO SECTION */
+  .hero {
+    padding: 4rem 0 3rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 3rem;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 0.25rem 0.75rem;
+    border-radius: 2px;
+    margin-bottom: 1.5rem;
+  }
+
+  h1 {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 800;
+    line-height: 1.05;
+    margin-bottom: 1rem;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .subtitle {
+    font-size: 1.05rem;
+    color: var(--muted);
+    max-width: 600px;
+    line-height: 1.6;
+  }
+
+  /* GRID LAYOUTS */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+  }
+
+  .card-accent-green { border-color: rgba(0,255,136,0.3); }
+  .card-accent-orange { border-color: rgba(255,107,53,0.3); }
+  .card-accent-purple { border-color: rgba(123,97,255,0.3); }
+  .card-accent-blue { border-color: rgba(0,212,255,0.3); }
+
+  .card h3 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.75rem;
+  }
+
+  .card p {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  /* SECTION HEADERS */
+  .section-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .section-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+  }
+
+  .section-title span { color: var(--accent); }
+
+  .section-desc {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    max-width: 560px;
+    line-height: 1.6;
+  }
+
+  /* ARCHITECTURE DIAGRAM */
+  .arch-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 2rem;
+    margin: 2rem 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .arch-layer {
+    margin-bottom: 1.5rem;
+  }
+
+  .arch-layer-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 0.6rem;
+    padding-left: 0.5rem;
+    border-left: 2px solid var(--border);
+  }
+
+  .arch-row {
+    display: flex; gap: 0.75rem; flex-wrap: wrap;
+  }
+
+  .arch-node {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 1rem;
+    font-size: 0.75rem;
+    font-family: 'Space Mono', monospace;
+    display: flex; align-items: center; gap: 0.5rem;
+    transition: all 0.2s;
+    cursor: default;
+  }
+
+  .arch-node:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .arch-node .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .dot-green { background: var(--accent); }
+  .dot-orange { background: var(--accent2); }
+  .dot-purple { background: var(--accent3); }
+  .dot-blue { background: var(--accent4); }
+  .dot-red { background: var(--danger); }
+  .dot-warn { background: var(--warn); }
+
+  .arch-arrow {
+    text-align: center;
+    color: var(--border);
+    font-size: 1.2rem;
+    margin: 0.5rem 0;
+  }
+
+  /* TECH STACK TABLE */
+  .tech-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    margin: 1.5rem 0;
+  }
+
+  .tech-table th {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 0.6rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tech-table td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid rgba(42,42,58,0.5);
+    vertical-align: top;
+  }
+
+  .tech-table tr:hover td { background: rgba(255,255,255,0.02); }
+
+  .badge {
+    display: inline-block;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    margin-right: 0.3rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .badge-green { background: rgba(0,255,136,0.15); color: var(--accent); border: 1px solid rgba(0,255,136,0.3); }
+  .badge-orange { background: rgba(255,107,53,0.15); color: var(--accent2); border: 1px solid rgba(255,107,53,0.3); }
+  .badge-purple { background: rgba(123,97,255,0.15); color: var(--accent3); border: 1px solid rgba(123,97,255,0.3); }
+  .badge-blue { background: rgba(0,212,255,0.15); color: var(--accent4); border: 1px solid rgba(0,212,255,0.3); }
+  .badge-grey { background: rgba(255,255,255,0.06); color: var(--muted); border: 1px solid var(--border); }
+
+  /* WIREFRAME STYLES */
+  .wireframe {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+
+  .wf-titlebar {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 0.75rem 1rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .wf-title {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  .wf-dots {
+    display: flex; gap: 6px;
+  }
+
+  .wf-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .wf-body { padding: 1.5rem; }
+
+  /* WIREFRAME COMPONENTS */
+  .wf-topbar {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 1rem;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .wf-sidebar-layout {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 1rem;
+    min-height: 400px;
+  }
+
+  .wf-sidebar {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem;
+  }
+
+  .wf-main { display: flex; flex-direction: column; gap: 1rem; }
+
+  .wf-placeholder {
+    background: var(--surface2);
+    border: 1px dashed var(--border);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 1px;
+  }
+
+  .wf-cam-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .wf-cam {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    aspect-ratio: 16/9;
+    position: relative;
+    overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .wf-cam-label {
+    position: absolute; top: 6px; left: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 1px;
+    background: rgba(0,0,0,0.7);
+    padding: 2px 6px;
+    border-radius: 2px;
+    color: var(--accent);
+  }
+
+  .wf-cam-badge {
+    position: absolute; bottom: 6px; right: 6px;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+
+  .wf-cam-icon {
+    color: var(--border);
+    font-size: 1.5rem;
+  }
+
+  .wf-detection-box {
+    position: absolute;
+    border: 2px solid;
+    border-radius: 2px;
+  }
+
+  .wf-stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .wf-stat {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem;
+    text-align: center;
+  }
+
+  .wf-stat-val {
+    font-size: 1.4rem;
+    font-weight: 800;
+    display: block;
+    margin-bottom: 0.2rem;
+  }
+
+  .wf-stat-lbl {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .wf-alert {
+    background: rgba(255,68,68,0.1);
+    border: 1px solid rgba(255,68,68,0.3);
+    border-radius: 4px;
+    padding: 0.6rem 0.8rem;
+    font-size: 0.75rem;
+    display: flex; align-items: center; gap: 0.5rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .wf-alert-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--danger);
+    flex-shrink: 0;
+    animation: pulse 1.5s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .wf-sidebar-item {
+    display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-bottom: 0.2rem;
+    color: var(--muted);
+  }
+
+  .wf-sidebar-item:hover { background: var(--border); color: var(--text); }
+  .wf-sidebar-item.active { background: rgba(0,255,136,0.1); color: var(--accent); }
+
+  .wf-sidebar-icon { font-size: 0.85rem; width: 18px; text-align: center; }
+
+  .wf-sidebar-section {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.55rem;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--border);
+    padding: 0.75rem 0.6rem 0.3rem;
+  }
+
+  /* PIPELINE */
+  .pipeline {
+    display: flex; align-items: center; gap: 0; overflow-x: auto;
+    padding: 1.5rem 0; margin: 1.5rem 0;
+  }
+
+  .pipeline-step {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    min-width: 130px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .pipeline-step-num {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    margin-bottom: 0.3rem;
+  }
+
+  .pipeline-step-name {
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 0.2rem;
+  }
+
+  .pipeline-step-sub {
+    font-size: 0.65rem;
+    color: var(--muted);
+  }
+
+  .pipeline-arrow {
+    color: var(--accent);
+    font-size: 1.1rem;
+    padding: 0 0.4rem;
+    flex-shrink: 0;
+  }
+
+  /* VERTICAL TABS (for verticals) */
+  .vertical-tabs { display: flex; gap: 1.5rem; }
+  .vtab-list { display: flex; flex-direction: column; gap: 0.4rem; min-width: 180px; }
+  .vtab-content { flex: 1; }
+
+  .vtab {
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    color: var(--muted);
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+
+  .vtab:hover { border-color: var(--border); color: var(--text); }
+
+  .vtab.active-mfg { background: rgba(255,107,53,0.1); border-color: rgba(255,107,53,0.4); color: var(--accent2); }
+  .vtab.active-safety { background: rgba(255,68,68,0.1); border-color: rgba(255,68,68,0.4); color: var(--danger); }
+  .vtab.active-traffic { background: rgba(0,212,255,0.1); border-color: rgba(0,212,255,0.4); color: var(--accent4); }
+  .vtab.active-restaurant { background: rgba(123,97,255,0.1); border-color: rgba(123,97,255,0.4); color: var(--accent3); }
+
+  .vtab-panel { display: none; }
+  .vtab-panel.active { display: block; }
+
+  /* API ENDPOINTS */
+  .endpoint {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.6rem;
+    display: flex; align-items: center; gap: 1rem;
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+  }
+
+  .method {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    font-weight: 700;
+    min-width: 48px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .method-get { background: rgba(0,212,255,0.15); color: var(--accent4); }
+  .method-post { background: rgba(0,255,136,0.15); color: var(--accent); }
+  .method-ws { background: rgba(123,97,255,0.15); color: var(--accent3); }
+
+  .endpoint-path { color: var(--text); flex: 1; }
+  .endpoint-desc { color: var(--muted); font-size: 0.65rem; }
+
+  /* TIMELINE */
+  .timeline { position: relative; padding-left: 2rem; }
+  .timeline::before {
+    content: '';
+    position: absolute; left: 0.4rem; top: 0; bottom: 0;
+    width: 1px; background: var(--border);
+  }
+
+  .timeline-item {
+    position: relative; margin-bottom: 1.5rem;
+  }
+
+  .timeline-dot {
+    position: absolute; left: -1.65rem; top: 0.35rem;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 2px solid;
+    background: var(--bg);
+  }
+
+  .timeline-dot-green { border-color: var(--accent); }
+  .timeline-dot-orange { border-color: var(--accent2); }
+  .timeline-dot-blue { border-color: var(--accent4); }
+  .timeline-dot-purple { border-color: var(--accent3); }
+
+  .timeline-time {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 0.2rem;
+  }
+
+  .timeline-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .timeline-body { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
+
+  .tasks { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem; }
+  .task {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.6rem;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--muted);
+  }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2.5rem 0;
+  }
+
+  /* MODEL TABLE */
+  .model-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .model-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 0.75rem;
+  }
+
+  .model-name { font-size: 1rem; font-weight: 700; }
+  .model-accuracy {
+    font-family: 'Space Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+  }
+
+  .model-details {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .model-detail { font-size: 0.75rem; }
+  .model-detail-lbl { color: var(--muted); font-size: 0.65rem; margin-bottom: 0.15rem; }
+
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+  }
+
+  .progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+    .wf-sidebar-layout { grid-template-columns: 1fr; }
+    .wf-sidebar { display: none; }
+    .wf-stat-row { grid-template-columns: repeat(2, 1fr); }
+    .vertical-tabs { flex-direction: column; }
+    .vtab-list { flex-direction: row; overflow-x: auto; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">// VisionSync</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showSection('overview')">Overview</button>
+    <button class="nav-tab" onclick="showSection('architecture')">Architecture</button>
+    <button class="nav-tab" onclick="showSection('models')">AI Models</button>
+    <button class="nav-tab" onclick="showSection('api')">API Design</button>
+    <button class="nav-tab" onclick="showSection('wireframes')">Wireframes</button>
+    <button class="nav-tab" onclick="showSection('verticals')">Verticals</button>
+    <button class="nav-tab" onclick="showSection('build')">Build Plan</button>
+  </div>
+</nav>
+
+<!-- ==================== OVERVIEW ==================== -->
+<section id="overview" class="active">
+  <div class="container">
+    <div class="hero">
+      <div class="tag">// Prince iSOLVE Hack'26 — Digital Image Processing</div>
+      <h1>Vision<span>Sync</span></h1>
+      <p class="subtitle">A plug-and-play AI vision layer that drops onto any existing CCTV infrastructure — no hardware swap, no vendor lock-in. One backend, four verticals, real-time intelligence.</p>
+    </div>
+
+    <div class="section-label">Core Concept</div>
+    <div class="section-title">How It <span>Works</span></div>
+    <p class="section-desc">Existing cameras → RTSP stream → VisionSync AI engine → Alerts + Dashboard + API. Zero changes to existing hardware.</p>
+
+    <div class="pipeline">
+      <div class="pipeline-step">
+        <div class="pipeline-step-num">INPUT</div>
+        <div class="pipeline-step-name">📷 Camera</div>
+        <div class="pipeline-step-sub">RTSP / Video file / Webcam</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="pipeline-step-num">INGEST</div>
+        <div class="pipeline-step-name">🔄 Frame Capture</div>
+        <div class="pipeline-step-sub">OpenCV, 15-30 FPS</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="pipeline-step-num">PROCESS</div>
+        <div class="pipeline-step-name">🧠 YOLO Inference</div>
+        <div class="pipeline-step-sub">YOLOv8 per vertical</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="pipeline-step-num">ANALYZE</div>
+        <div class="pipeline-step-name">⚡ Logic Engine</div>
+        <div class="pipeline-step-sub">Rules + Counters + Zones</div>
+      </div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-step">
+        <div class="pipeline-step-num">OUTPUT</div>
+        <div class="pipeline-step-name">📊 Dashboard</div>
+        <div class="pipeline-step-sub">Alerts + Stats + Stream</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section-label">Verticals</div>
+    <div class="section-title">Four <span>Use Cases</span></div>
+    <p class="section-desc">Each vertical runs as a separate detection module with its own model + logic. All share one unified dashboard.</p>
+
+    <div class="grid-2">
+      <div class="card card-accent-orange">
+        <h3>🏭 Manufacturing Defect Detection</h3>
+        <p>Computer vision on conveyor belt or product line. Detects surface cracks, missing parts, colour anomalies, dimensional defects. Flags defective items before packaging. Model: YOLOv8 + anomaly detection.</p>
+        <div style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.3rem">
+          <span class="badge badge-orange">YOLOv8</span>
+          <span class="badge badge-grey">MVTec Dataset</span>
+          <span class="badge badge-grey">Anomaly Detection</span>
+        </div>
+      </div>
+      <div class="card card-accent-red" style="border-color:rgba(255,68,68,0.3)">
+        <h3>🦺 Worker Safety / PPE / Accidents</h3>
+        <p>Detects PPE compliance (helmet, vest, gloves), restricted zone intrusions, falls, fire/smoke. Real-time alerts sent to safety manager. Model: YOLOv8-PPE pretrained.</p>
+        <div style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.3rem">
+          <span class="badge badge-orange">YOLOv8</span>
+          <span class="badge badge-grey">PPE Dataset</span>
+          <span class="badge badge-grey">Zone Detection</span>
+        </div>
+      </div>
+      <div class="card card-accent-blue">
+        <h3>🚦 Traffic Management</h3>
+        <p>Vehicle counting, queue length estimation, red-light violation detection, wrong-way detection, congestion heatmaps per lane. Adaptive signal timing logic built in.</p>
+        <div style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.3rem">
+          <span class="badge badge-blue">YOLOv8</span>
+          <span class="badge badge-grey">COCO Vehicles</span>
+          <span class="badge badge-grey">Line Crossing</span>
+        </div>
+      </div>
+      <div class="card card-accent-purple">
+        <h3>🍽️ Restaurant Efficiency</h3>
+        <p>Table occupancy tracking, queue length at counter, staff activity monitoring, hygiene compliance (mask/gloves), average wait-time calculation from entry to seating.</p>
+        <div style="margin-top:0.75rem;display:flex;flex-wrap:wrap;gap:0.3rem">
+          <span class="badge badge-purple">YOLOv8</span>
+          <span class="badge badge-grey">COCO People</span>
+          <span class="badge badge-grey">Dwell Time</span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section-label">Why This Wins</div>
+    <div class="grid-3" style="margin-top:1rem">
+      <div class="card">
+        <h3 style="color:var(--accent)">🔌 Plug & Play</h3>
+        <p>Works with any existing RTSP camera. No hardware change. Point it at a stream, choose a vertical, done. This is the #1 differentiator judges remember.</p>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--accent2)">🧩 Modular</h3>
+        <p>Each vertical is a swappable module. Add new ones without touching core engine. Shows system design thinking that judges at engineering hackathons specifically score.</p>
+      </div>
+      <div class="card">
+        <h3 style="color:var(--accent3)">💼 Real ROI</h3>
+        <p>Every vertical has a quantifiable business impact: defect catch rate, PPE violations prevented, tables turned per hour. Numbers tell a story accuracy metrics can't.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== ARCHITECTURE ==================== -->
+<section id="architecture">
+  <div class="container">
+    <div class="hero">
+      <div class="tag">// System Design</div>
+      <h1>Full <span>Architecture</span></h1>
+      <p class="subtitle">Every layer from raw camera input to browser dashboard. Built for a solo developer to ship in 12-24 hours.</p>
+    </div>
+
+    <div class="arch-diagram">
+      <div class="arch-layer">
+        <div class="arch-layer-label">Layer 1 — Input Sources</div>
+        <div class="arch-row">
+          <div class="arch-node"><span class="dot dot-blue"></span>RTSP Camera Stream</div>
+          <div class="arch-node"><span class="dot dot-blue"></span>Webcam (cv2.VideoCapture)</div>
+          <div class="arch-node"><span class="dot dot-blue"></span>Video File (.mp4/.avi)</div>
+          <div class="arch-node"><span class="dot dot-blue"></span>IP Camera URL</div>
+        </div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-layer">
+        <div class="arch-layer-label">Layer 2 — Frame Ingestion (OpenCV)</div>
+        <div class="arch-row">
+          <div class="arch-node"><span class="dot dot-green"></span>VideoCapture Thread</div>
+          <div class="arch-node"><span class="dot dot-green"></span>Frame Buffer (Queue)</div>
+          <div class="arch-node"><span class="dot dot-green"></span>Frame Resize (640x480)</div>
+          <div class="arch-node"><span class="dot dot-green"></span>FPS Throttle</div>
+        </div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-layer">
+        <div class="arch-layer-label">Layer 3 — AI Inference Engine (YOLOv8 via Ultralytics)</div>
+        <div class="arch-row">
+          <div class="arch-node"><span class="dot dot-orange"></span>Module: Manufacturing (yolo-mfg.pt)</div>
+          <div class="arch-node"><span class="dot dot-red"></span>Module: Safety/PPE (yolo-ppe.pt)</div>
+          <div class="arch-node"><span class="dot dot-blue"></span>Module: Traffic (yolo-traffic.pt)</div>
+          <div class="arch-node"><span class="dot dot-purple"></span>Module: Restaurant (yolo-resto.pt)</div>
+        </div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-layer">
+        <div class="arch-layer-label">Layer 4 — Logic & Rules Engine</div>
+        <div class="arch-row">
+          <div class="arch-node"><span class="dot dot-warn"></span>Virtual Line Counter</div>
+          <div class="arch-node"><span class="dot dot-warn"></span>Zone Intrusion Detector</div>
+          <div class="arch-node"><span class="dot dot-warn"></span>Dwell Time Tracker</div>
+          <div class="arch-node"><span class="dot dot-warn"></span>Alert Throttle (cooldown)</div>
+          <div class="arch-node"><span class="dot dot-warn"></span>Event Logger (SQLite)</div>
+        </div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-layer">
+        <div class="arch-layer-label">Layer 5 — Backend API (FastAPI)</div>
+        <div class="arch-row">
+          <div class="arch-node"><span class="dot dot-green"></span>REST Endpoints</div>
+          <div class="arch-node"><span class="dot dot-green"></span>WebSocket (live stream)</div>
+          <div class="arch-node"><span class="dot dot-green"></span>WebSocket (alerts)</div>
+          <div class="arch-node"><span class="dot dot-green"></span>MJPEG Stream Endpoint</div>
+          <div class="arch-node"><span class="dot dot-green"></span>SQLite / JSON Store</div>
+        </div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-layer">
+        <div class="arch-layer-label">Layer 6 — Frontend (Your React/HTML UI)</div>
+        <div class="arch-row">
+          <div class="arch-node"><span class="dot dot-purple"></span>Live Camera Feed</div>
+          <div class="arch-node"><span class="dot dot-purple"></span>Real-Time Alerts Panel</div>
+          <div class="arch-node"><span class="dot dot-purple"></span>Stats Dashboard</div>
+          <div class="arch-node"><span class="dot dot-purple"></span>Vertical Switcher</div>
+          <div class="arch-node"><span class="dot dot-purple"></span>Analytics Charts</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section-label">Folder Structure</div>
+    <div class="section-title">Project <span>Layout</span></div>
+    <div class="card" style="margin-top:1rem">
+      <pre style="font-family:'Space Mono',monospace;font-size:0.72rem;line-height:1.9;color:var(--text)">
+<span style="color:var(--accent)">visionsync/</span>
+├── <span style="color:var(--accent2)">backend/</span>
+│   ├── main.py               <span style="color:var(--muted)"># FastAPI app, routes, WebSocket</span>
+│   ├── camera_manager.py     <span style="color:var(--muted)"># VideoCapture threads, frame queue</span>
+│   ├── inference_engine.py   <span style="color:var(--muted)"># YOLOv8 runner, model loader</span>
+│   ├── logic/
+│   │   ├── manufacturing.py  <span style="color:var(--muted)"># defect detection rules</span>
+│   │   ├── safety.py         <span style="color:var(--muted)"># PPE, zone, fall logic</span>
+│   │   ├── traffic.py        <span style="color:var(--muted)"># counting, violations</span>
+│   │   └── restaurant.py     <span style="color:var(--muted)"># occupancy, dwell time</span>
+│   ├── alert_manager.py      <span style="color:var(--muted)"># alert dedup, cooldown, emit</span>
+│   ├── db.py                 <span style="color:var(--muted)"># SQLite events log</span>
+│   └── models/               <span style="color:var(--muted)"># .pt weight files go here</span>
+│
+├── <span style="color:var(--accent3)">frontend/</span>
+│   ├── index.html            <span style="color:var(--muted)"># main entry</span>
+│   ├── dashboard.js          <span style="color:var(--muted)"># WebSocket client, DOM update</span>
+│   ├── charts.js             <span style="color:var(--muted)"># Chart.js analytics</span>
+│   └── styles.css
+│
+└── <span style="color:var(--accent4)">demo/</span>
+    ├── factory_sample.mp4
+    ├── traffic_sample.mp4
+    └── restaurant_sample.mp4  <span style="color:var(--muted)"># always have fallback videos!</span>
+      </pre>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section-label">Key Design Decisions</div>
+    <div class="grid-3" style="margin-top:1rem">
+      <div class="card">
+        <h3>🧵 Threading Model</h3>
+        <p>Camera capture runs in a background thread, pushing frames into a <code style="background:var(--surface2);padding:0 3px;border-radius:2px;font-size:0.8rem">queue.Queue(maxsize=2)</code>. Inference reads from queue. Never blocks the FastAPI event loop.</p>
+      </div>
+      <div class="card">
+        <h3>📡 WebSocket Strategy</h3>
+        <p>Two sockets: <code style="background:var(--surface2);padding:0 3px;border-radius:2px;font-size:0.8rem">/ws/stats</code> pushes JSON every 1s. <code style="background:var(--surface2);padding:0 3px;border-radius:2px;font-size:0.8rem">/stream</code> is MJPEG for annotated video. This keeps UI snappy without frame-dropping.</p>
+      </div>
+      <div class="card">
+        <h3>🔁 Alert Cooldown</h3>
+        <p>Each alert type has a configurable cooldown (e.g. 10s for PPE violation). Prevents alert spam. Stored with timestamp in SQLite so you can show a timeline of events.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== MODELS ==================== -->
+<section id="models">
+  <div class="container">
+    <div class="hero">
+      <div class="tag">// AI Layer</div>
+      <h1>Model <span>Strategy</span></h1>
+      <p class="subtitle">Use pretrained YOLOv8 weights for everything. Zero training time. Plug in, run, win.</p>
+    </div>
+
+    <div class="section-label">The Golden Rule</div>
+    <div class="card card-accent-green" style="margin-bottom:2rem">
+      <h3 style="color:var(--accent);font-size:1rem">Don't train. Finetune at most. Use pretrained weights everywhere.</h3>
+      <p style="margin-top:0.5rem">YOLOv8 pretrained on COCO already detects: person, car, truck, bicycle, motorcycle, chair, dining table, bottle. That covers 80% of what you need across all 4 verticals. Specialty models (PPE, defects) already exist as open-source pretrained weights on Hugging Face + Roboflow.</p>
+    </div>
+
+    <div class="model-card">
+      <div class="model-header">
+        <div>
+          <div class="model-name">🏭 Manufacturing — Anomaly/Defect Detection</div>
+          <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem">YOLOv8 + Anomalib (PatchCore)</div>
+        </div>
+        <div class="model-accuracy">~90% precision</div>
+      </div>
+      <div class="model-details">
+        <div class="model-detail">
+          <div class="model-detail-lbl">Weights Source</div>
+          <span class="badge badge-orange">Roboflow Universe</span>
+          <span class="badge badge-grey">MVTec AD</span>
+        </div>
+        <div class="model-detail">
+          <div class="model-detail-lbl">Detects</div>
+          <div style="font-size:0.78rem">Scratches, cracks, missing components, discolouration, assembly errors</div>
+        </div>
+        <div class="model-detail">
+          <div class="model-detail-lbl">Fallback if no domain model</div>
+          <div style="font-size:0.78rem">OpenCV contour + edge analysis for demo purposes</div>
+        </div>
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:0.7rem;background:var(--surface2);padding:0.75rem;border-radius:4px;color:var(--accent)">
+        pip install ultralytics anomalib<br>
+        # Roboflow: search "manufacturing defect detection" → export YOLOv8
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-header">
+        <div>
+          <div class="model-name">🦺 Worker Safety — PPE + Zone Detection</div>
+          <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem">YOLOv8 PPE pretrained (Roboflow Community)</div>
+        </div>
+        <div class="model-accuracy">~85% mAP50</div>
+      </div>
+      <div class="model-details">
+        <div class="model-detail">
+          <div class="model-detail-lbl">Weights Source</div>
+          <span class="badge badge-orange">keremberke/yolov8m-hard-hat-detection</span>
+        </div>
+        <div class="model-detail">
+          <div class="model-detail-lbl">Detects</div>
+          <div style="font-size:0.78rem">Hard hat, safety vest, gloves, goggles, person (for zone checking)</div>
+        </div>
+        <div class="model-detail">
+          <div class="model-detail-lbl">Zone Logic</div>
+          <div style="font-size:0.78rem">Draw polygon zones in config. If person bbox centroid is inside zone → trigger alert</div>
+        </div>
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:0.7rem;background:var(--surface2);padding:0.75rem;border-radius:4px;color:var(--accent)">
+        from huggingface_hub import hf_hub_download<br>
+        model = YOLO("keremberke/yolov8m-hard-hat-detection")
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-header">
+        <div>
+          <div class="model-name">🚦 Traffic — Vehicle Detection + Counting</div>
+          <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem">YOLOv8n (COCO) — cars, trucks, bikes already included</div>
+        </div>
+        <div class="model-accuracy">~94% mAP50</div>
+      </div>
+      <div class="model-details">
+        <div class="model-detail">
+          <div class="model-detail-lbl">Weights Source</div>
+          <span class="badge badge-blue">yolov8n.pt (built-in COCO)</span>
+        </div>
+        <div class="model-detail">
+          <div class="model-detail-lbl">Extra Logic</div>
+          <div style="font-size:0.78rem">Supervision ByteTrack for tracking IDs across frames, virtual line for counting</div>
+        </div>
+        <div class="model-detail">
+          <div class="model-detail-lbl">Queue Estimation</div>
+          <div style="font-size:0.78rem">Count vehicles in defined region → queue length metric</div>
+        </div>
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:0.7rem;background:var(--surface2);padding:0.75rem;border-radius:4px;color:var(--accent)">
+        pip install supervision  # ByteTrack + annotators built-in<br>
+        model = YOLO("yolov8n.pt")  # No download needed
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-header">
+        <div>
+          <div class="model-name">🍽️ Restaurant — People + Occupancy Tracking</div>
+          <div style="font-size:0.78rem;color:var(--muted);margin-top:0.2rem">YOLOv8n (COCO) + Supervision tracking</div>
+        </div>
+        <div class="model-accuracy">~91% mAP50</div>
+      </div>
+      <div class="model-details">
+        <div class="model-detail">
+          <div class="model-detail-lbl">Weights Source</div>
+          <span class="badge badge-purple">yolov8n.pt (COCO person)</span>
+        </div>
+        <div class="model-detail">
+          <div class="model-detail-lbl">Detects</div>
+          <div style="font-size:0.78rem">Person count per zone (tables), queue at counter, chair occupancy</div>
+        </div>
+        <div class="model-detail">
+          <div class="model-detail-lbl">Dwell Time</div>
+          <div style="font-size:0.78rem">Track person ID entry timestamp → calculate avg time at table</div>
+        </div>
+      </div>
+      <div style="font-family:'Space Mono',monospace;font-size:0.7rem;background:var(--surface2);padding:0.75rem;border-radius:4px;color:var(--accent)">
+        # Same yolov8n.pt as traffic — reuse model, change logic module
+      </div>
+    </div>
+
+    <hr class="divider">
+    <div class="section-label">Install Everything</div>
+    <div class="card" style="margin-top:1rem">
+      <pre style="font-family:'Space Mono',monospace;font-size:0.72rem;line-height:1.9;color:var(--accent)">
+pip install ultralytics supervision fastapi uvicorn opencv-python-headless
+pip install huggingface_hub anomalib python-multipart websockets
+      </pre>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== API ==================== -->
+<section id="api">
+  <div class="container">
+    <div class="hero">
+      <div class="tag">// Backend API</div>
+      <h1>API <span>Design</span></h1>
+      <p class="subtitle">FastAPI backend. Clean REST + WebSocket. Your frontend just connects to these endpoints.</p>
+    </div>
+
+    <div class="section-label">Core Endpoints</div>
+    <div class="section-title">REST <span>Routes</span></div>
+
+    <div style="margin:1.5rem 0">
+      <div class="endpoint">
+        <span class="method method-post">POST</span>
+        <span class="endpoint-path">/api/feed/start</span>
+        <span class="endpoint-desc">{ source: "rtsp://...", vertical: "safety" } → starts inference pipeline</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-post">POST</span>
+        <span class="endpoint-path">/api/feed/stop</span>
+        <span class="endpoint-desc">Stops current feed + inference</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/stats</span>
+        <span class="endpoint-desc">Returns current metrics JSON for active vertical</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/alerts</span>
+        <span class="endpoint-desc">Paginated alert history from SQLite</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/events?vertical=safety&limit=50</span>
+        <span class="endpoint-desc">Event log filtered by vertical + time range</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/stream</span>
+        <span class="endpoint-desc">MJPEG annotated video stream — drop into &lt;img src="/stream"&gt;</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-post">POST</span>
+        <span class="endpoint-path">/api/zones/set</span>
+        <span class="endpoint-desc">{ zones: [[x1,y1,x2,y2], ...] } — define restricted zones per vertical</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/verticals</span>
+        <span class="endpoint-desc">List of available verticals + their status</span>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section-title">WebSocket <span>Events</span></div>
+    <div style="margin:1.5rem 0">
+      <div class="endpoint">
+        <span class="method method-ws">WS</span>
+        <span class="endpoint-path">ws://localhost:8000/ws/stats</span>
+        <span class="endpoint-desc">Pushes stats JSON every 1 second to all connected clients</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-ws">WS</span>
+        <span class="endpoint-path">ws://localhost:8000/ws/alerts</span>
+        <span class="endpoint-desc">Pushes alert event instantly when triggered (for live alert banner)</span>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section-label">JSON Schemas</div>
+    <div class="grid-2" style="margin-top:1rem">
+      <div class="card">
+        <div class="section-label" style="margin-bottom:0.5rem">Stats Payload (ws/stats)</div>
+        <pre style="font-family:'Space Mono',monospace;font-size:0.68rem;line-height:1.8;color:var(--text)">
+{
+  <span style="color:var(--accent)">"vertical"</span>: "safety",
+  <span style="color:var(--accent)">"timestamp"</span>: 1708500000,
+  <span style="color:var(--accent)">"fps"</span>: 24,
+  <span style="color:var(--accent)">"metrics"</span>: {
+    <span style="color:var(--accent2)">"persons_detected"</span>: 4,
+    <span style="color:var(--accent2)">"ppe_compliant"</span>: 3,
+    <span style="color:var(--accent2)">"violations"</span>: 1,
+    <span style="color:var(--accent2)">"zone_intrusions"</span>: 0
+  },
+  <span style="color:var(--accent)">"detections"</span>: [
+    { "class": "helmet", "conf": 0.92, "bbox": [...] }
+  ]
+}
+        </pre>
+      </div>
+      <div class="card">
+        <div class="section-label" style="margin-bottom:0.5rem">Alert Payload (ws/alerts)</div>
+        <pre style="font-family:'Space Mono',monospace;font-size:0.68rem;line-height:1.8;color:var(--text)">
+{
+  <span style="color:var(--accent)">"id"</span>: "alert_00127",
+  <span style="color:var(--accent)">"type"</span>: "PPE_VIOLATION",
+  <span style="color:var(--accent)">"severity"</span>: "HIGH",
+  <span style="color:var(--accent)">"message"</span>: "Worker without helmet
+  detected in Zone B",
+  <span style="color:var(--accent)">"confidence"</span>: 0.87,
+  <span style="color:var(--accent)">"vertical"</span>: "safety",
+  <span style="color:var(--accent)">"timestamp"</span>: 1708500042,
+  <span style="color:var(--accent)">"frame_snapshot"</span>: "base64..."
+}
+        </pre>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section-label">main.py Skeleton</div>
+    <div class="card" style="margin-top:1rem">
+      <pre style="font-family:'Space Mono',monospace;font-size:0.68rem;line-height:1.9;color:var(--text)">
+<span style="color:var(--muted)"># main.py — FastAPI skeleton</span>
+<span style="color:var(--accent4)">from</span> fastapi <span style="color:var(--accent4)">import</span> FastAPI, WebSocket
+<span style="color:var(--accent4)">from</span> fastapi.responses <span style="color:var(--accent4)">import</span> StreamingResponse
+<span style="color:var(--accent4)">from</span> camera_manager <span style="color:var(--accent4)">import</span> CameraManager
+<span style="color:var(--accent4)">from</span> inference_engine <span style="color:var(--accent4)">import</span> InferenceEngine
+
+app = FastAPI()
+camera = CameraManager()
+engine = InferenceEngine()
+
+<span style="color:var(--accent2)">@app.post</span>("/api/feed/start")
+<span style="color:var(--accent4)">async def</span> start_feed(source: str, vertical: str):
+    camera.start(source)
+    engine.load_module(vertical)
+    <span style="color:var(--accent4)">return</span> { "status": "started" }
+
+<span style="color:var(--accent2)">@app.get</span>("/stream")
+<span style="color:var(--accent4)">def</span> video_stream():
+    <span style="color:var(--accent4)">return</span> StreamingResponse(
+        engine.generate_frames(),
+        media_type="multipart/x-mixed-replace; boundary=frame"
+    )
+
+<span style="color:var(--accent2)">@app.websocket</span>("/ws/stats")
+<span style="color:var(--accent4)">async def</span> stats_ws(ws: WebSocket):
+    <span style="color:var(--accent4)">await</span> ws.accept()
+    <span style="color:var(--accent4)">while True</span>:
+        stats = engine.get_stats()
+        <span style="color:var(--accent4)">await</span> ws.send_json(stats)
+        <span style="color:var(--accent4)">await</span> asyncio.sleep(1)
+      </pre>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== WIREFRAMES ==================== -->
+<section id="wireframes">
+  <div class="container">
+    <div class="hero">
+      <div class="tag">// UI Design</div>
+      <h1>Dashboard <span>Wireframes</span></h1>
+      <p class="subtitle">Exact layout for every screen. Build these directly — the structure is final.</p>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <div class="section-label">Screen 1 — Main Dashboard (All Verticals)</div>
+    <div class="wireframe" style="margin-top:0.75rem">
+      <div class="wf-titlebar">
+        <div class="wf-title">VISIONSYNC — MAIN DASHBOARD</div>
+        <div class="wf-dots"><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div></div>
+      </div>
+      <div class="wf-body">
+        <!-- Topbar -->
+        <div class="wf-topbar">
+          <div style="display:flex;align-items:center;gap:1rem">
+            <span style="font-family:'Space Mono',monospace;font-size:0.75rem;color:var(--accent)">● LIVE</span>
+            <span style="font-size:0.78rem;color:var(--muted)">Camera: /dev/video0 | 24 FPS | 640×480</span>
+          </div>
+          <div style="display:flex;gap:0.5rem">
+            <button style="font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.3rem 0.75rem;background:rgba(255,107,53,0.15);color:var(--accent2);border:1px solid rgba(255,107,53,0.4);border-radius:4px;cursor:pointer">MFG</button>
+            <button style="font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.3rem 0.75rem;background:rgba(255,68,68,0.15);color:var(--danger);border:1px solid rgba(255,68,68,0.4);border-radius:4px;cursor:pointer">SAFETY</button>
+            <button style="font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.3rem 0.75rem;background:rgba(0,212,255,0.15);color:var(--accent4);border:1px solid rgba(0,212,255,0.4);border-radius:4px;cursor:pointer">TRAFFIC</button>
+            <button style="font-family:'Space Mono',monospace;font-size:0.65rem;padding:0.3rem 0.75rem;background:rgba(123,97,255,0.2);color:var(--accent3);border:1px solid var(--accent3);border-radius:4px;cursor:pointer">RESTO ✓</button>
+          </div>
+        </div>
+
+        <!-- Stats Row -->
+        <div class="wf-stat-row">
+          <div class="wf-stat">
+            <span class="wf-stat-val" style="color:var(--accent)">12</span>
+            <span class="wf-stat-lbl">Tables Occupied</span>
+          </div>
+          <div class="wf-stat">
+            <span class="wf-stat-val" style="color:var(--accent2)">7</span>
+            <span class="wf-stat-lbl">Queue Length</span>
+          </div>
+          <div class="wf-stat">
+            <span class="wf-stat-val" style="color:var(--accent4)">14m</span>
+            <span class="wf-stat-lbl">Avg Wait Time</span>
+          </div>
+          <div class="wf-stat">
+            <span class="wf-stat-val" style="color:var(--warn)">3</span>
+            <span class="wf-stat-lbl">Alerts Today</span>
+          </div>
+        </div>
+
+        <!-- Sidebar + Main -->
+        <div class="wf-sidebar-layout">
+          <div class="wf-sidebar">
+            <div class="wf-sidebar-section">Navigation</div>
+            <div class="wf-sidebar-item active">📊 Dashboard</div>
+            <div class="wf-sidebar-item">📹 Live Feed</div>
+            <div class="wf-sidebar-item">🔔 Alerts</div>
+            <div class="wf-sidebar-item">📈 Analytics</div>
+            <div class="wf-sidebar-item">⚙️ Config</div>
+            <div class="wf-sidebar-section" style="margin-top:1rem">Verticals</div>
+            <div class="wf-sidebar-item">🏭 Manufacturing</div>
+            <div class="wf-sidebar-item">🦺 Safety</div>
+            <div class="wf-sidebar-item">🚦 Traffic</div>
+            <div class="wf-sidebar-item active">🍽️ Restaurant</div>
+          </div>
+          <div class="wf-main">
+            <!-- Camera Grid -->
+            <div class="wf-cam-grid">
+              <div class="wf-cam" style="aspect-ratio:16/9">
+                <div class="wf-cam-label">CAM-01 / DINING AREA</div>
+                <div class="wf-cam-badge" style="background:rgba(0,255,136,0.2);color:var(--accent)">12 PERSONS</div>
+                <span class="wf-cam-icon">🎥</span>
+                <div class="wf-detection-box" style="width:40px;height:50px;top:30%;left:20%;border-color:var(--accent)"></div>
+                <div class="wf-detection-box" style="width:35px;height:45px;top:35%;left:55%;border-color:var(--accent)"></div>
+              </div>
+              <div class="wf-cam" style="aspect-ratio:16/9">
+                <div class="wf-cam-label">CAM-02 / COUNTER</div>
+                <div class="wf-cam-badge" style="background:rgba(255,170,0,0.2);color:var(--warn)">QUEUE: 7</div>
+                <span class="wf-cam-icon">🎥</span>
+              </div>
+            </div>
+            <!-- Alert Feed -->
+            <div>
+              <div style="font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:2px;color:var(--muted);margin-bottom:0.5rem">LIVE ALERTS</div>
+              <div class="wf-alert">
+                <div class="wf-alert-dot"></div>
+                <span style="font-size:0.75rem">Queue exceeds 6 persons at counter — CAM-02 · 2 min ago</span>
+              </div>
+              <div style="background:rgba(255,170,0,0.07);border:1px solid rgba(255,170,0,0.3);border-radius:4px;padding:0.6rem 0.8rem;font-size:0.75rem;display:flex;align-items:center;gap:0.5rem;margin-bottom:0.4rem">
+                <div style="width:8px;height:8px;border-radius:50%;background:var(--warn);flex-shrink:0"></div>
+                Table T04 occupied for 68 min (avg: 42 min) — CAM-01 · 5 min ago
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FEED SETUP SCREEN -->
+    <div class="section-label" style="margin-top:2rem">Screen 2 — Feed Setup (Add Camera Source)</div>
+    <div class="wireframe" style="margin-top:0.75rem">
+      <div class="wf-titlebar">
+        <div class="wf-title">ADD CAMERA FEED</div>
+        <div class="wf-dots"><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div></div>
+      </div>
+      <div class="wf-body">
+        <div class="grid-2">
+          <div>
+            <div style="margin-bottom:1.2rem">
+              <div style="font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:1px;color:var(--muted);margin-bottom:0.4rem">SOURCE TYPE</div>
+              <div style="display:flex;gap:0.5rem">
+                <div style="padding:0.5rem 1rem;border:1px solid var(--accent);border-radius:4px;font-size:0.78rem;color:var(--accent);background:rgba(0,255,136,0.07)">Webcam</div>
+                <div style="padding:0.5rem 1rem;border:1px solid var(--border);border-radius:4px;font-size:0.78rem;color:var(--muted)">RTSP URL</div>
+                <div style="padding:0.5rem 1rem;border:1px solid var(--border);border-radius:4px;font-size:0.78rem;color:var(--muted)">Video File</div>
+                <div style="padding:0.5rem 1rem;border:1px solid var(--border);border-radius:4px;font-size:0.78rem;color:var(--muted)">IP Camera</div>
+              </div>
+            </div>
+            <div style="margin-bottom:1.2rem">
+              <div style="font-family:'Space Mono',monospace;font-size:0.65rem;letter-spacing:1px;color:var(--muted);margin-bottom:0.4rem">SELECT VERTICAL</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
+                <div style="padding:0.75rem;border:1px solid rgba(255,107,53,0.4);border-radius:6px;font-size:0.8rem;color:var(--accent2);background:rgba(255,107,53,0.07)">🏭 Manufacturing</div>
+                <div style="padding:0.75rem;border:1px solid var(--border);border-radius:6px;font-size:0.8rem;color:var(--muted)">🦺 Safety / PPE</div>
+                <div style="padding:0.75rem;border:1px solid var(--border);border-radius:6px;font-size:0.8rem;color:var(--muted)">🚦 Traffic</div>
+                <div style="padding:0.75rem;border:1px solid var(--border);border-radius:6px;font-size:0.8rem;color:var(--muted)">🍽️ Restaurant</div>
+              </div>
+            </div>
+            <div style="background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.3);border-radius:6px;padding:1rem;font-size:0.8rem;color:var(--accent2)">
+              ✓ Model loaded: yolo-mfg-defect.pt (42MB)<br>
+              ✓ Ready to start inference
+            </div>
+          </div>
+          <div class="wf-cam" style="height:220px;border-radius:6px">
+            <div class="wf-cam-label">PREVIEW</div>
+            <span class="wf-cam-icon" style="font-size:2rem">📷</span>
+            <div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-family:'Space Mono',monospace;font-size:0.6rem;color:var(--muted)">Camera preview will appear here</div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;margin-top:1rem">
+          <button style="font-family:'Space Mono',monospace;font-size:0.75rem;padding:0.6rem 1.5rem;background:var(--accent);color:#000;border:none;border-radius:4px;cursor:pointer;font-weight:700">▶ START DETECTION</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS SCREEN -->
+    <div class="section-label" style="margin-top:2rem">Screen 3 — Analytics View</div>
+    <div class="wireframe" style="margin-top:0.75rem">
+      <div class="wf-titlebar">
+        <div class="wf-title">ANALYTICS — LAST 24 HOURS</div>
+        <div class="wf-dots"><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div></div>
+      </div>
+      <div class="wf-body">
+        <div class="grid-2">
+          <div class="wf-placeholder" style="height:180px;flex-direction:column;gap:0.4rem">
+            <div style="font-size:1.5rem">📈</div>
+            <div>DETECTIONS OVER TIME (Line Chart)</div>
+            <div style="color:var(--muted);font-size:0.6rem">Chart.js — ws/stats history array</div>
+          </div>
+          <div class="wf-placeholder" style="height:180px;flex-direction:column;gap:0.4rem">
+            <div style="font-size:1.5rem">🍩</div>
+            <div>ALERT BREAKDOWN (Donut Chart)</div>
+            <div style="color:var(--muted);font-size:0.6rem">PPE Violation / Zone Breach / Defect / Other</div>
+          </div>
+        </div>
+        <div style="margin-top:1rem">
+          <div style="font-family:'Space Mono',monospace;font-size:0.6rem;letter-spacing:2px;color:var(--muted);margin-bottom:0.75rem">RECENT EVENTS LOG</div>
+          <table style="width:100%;border-collapse:collapse;font-size:0.75rem">
+            <tr style="border-bottom:1px solid var(--border)">
+              <th style="text-align:left;padding:0.4rem 0.6rem;color:var(--muted);font-family:'Space Mono',monospace;font-size:0.6rem">TIME</th>
+              <th style="text-align:left;padding:0.4rem 0.6rem;color:var(--muted);font-family:'Space Mono',monospace;font-size:0.6rem">VERTICAL</th>
+              <th style="text-align:left;padding:0.4rem 0.6rem;color:var(--muted);font-family:'Space Mono',monospace;font-size:0.6rem">TYPE</th>
+              <th style="text-align:left;padding:0.4rem 0.6rem;color:var(--muted);font-family:'Space Mono',monospace;font-size:0.6rem">SEVERITY</th>
+              <th style="text-align:left;padding:0.4rem 0.6rem;color:var(--muted);font-family:'Space Mono',monospace;font-size:0.6rem">MESSAGE</th>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(42,42,58,0.5)">
+              <td style="padding:0.5rem 0.6rem;color:var(--muted)">14:32:10</td>
+              <td style="padding:0.5rem 0.6rem"><span class="badge badge-orange">SAFETY</span></td>
+              <td style="padding:0.5rem 0.6rem">PPE_VIOLATION</td>
+              <td style="padding:0.5rem 0.6rem"><span style="color:var(--danger)">HIGH</span></td>
+              <td style="padding:0.5rem 0.6rem;color:var(--muted)">Worker without helmet in Zone B</td>
+            </tr>
+            <tr style="border-bottom:1px solid rgba(42,42,58,0.5)">
+              <td style="padding:0.5rem 0.6rem;color:var(--muted)">14:28:55</td>
+              <td style="padding:0.5rem 0.6rem"><span class="badge badge-blue">TRAFFIC</span></td>
+              <td style="padding:0.5rem 0.6rem">CONGESTION</td>
+              <td style="padding:0.5rem 0.6rem"><span style="color:var(--warn)">MED</span></td>
+              <td style="padding:0.5rem 0.6rem;color:var(--muted)">Lane 2 queue: 12 vehicles</td>
+            </tr>
+            <tr>
+              <td style="padding:0.5rem 0.6rem;color:var(--muted)">14:20:02</td>
+              <td style="padding:0.5rem 0.6rem"><span class="badge badge-orange">MFG</span></td>
+              <td style="padding:0.5rem 0.6rem">DEFECT_DETECTED</td>
+              <td style="padding:0.5rem 0.6rem"><span style="color:var(--accent)">LOW</span></td>
+              <td style="padding:0.5rem 0.6rem;color:var(--muted)">Surface scratch on unit #4423</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== VERTICALS ==================== -->
+<section id="verticals">
+  <div class="container">
+    <div class="hero">
+      <div class="tag">// Detection Logic</div>
+      <h1>Vertical <span>Deep Dives</span></h1>
+      <p class="subtitle">Exact detection logic, rules, alert triggers, and metrics for each vertical.</p>
+    </div>
+
+    <div class="vertical-tabs">
+      <div class="vtab-list">
+        <div class="vtab active-mfg" onclick="switchVtab('mfg', this)">🏭 Manufacturing</div>
+        <div class="vtab" onclick="switchVtab('safety', this)">🦺 Safety</div>
+        <div class="vtab" onclick="switchVtab('traffic', this)">🚦 Traffic</div>
+        <div class="vtab" onclick="switchVtab('resto', this)">🍽️ Restaurant</div>
+      </div>
+
+      <div class="vtab-content">
+        <!-- MFG -->
+        <div class="vtab-panel active" id="vp-mfg">
+          <div class="card card-accent-orange" style="margin-bottom:1rem">
+            <h3 style="color:var(--accent2)">🏭 Manufacturing Defect Detection</h3>
+            <p>Analyze conveyor belt / product surface for visual anomalies in real-time.</p>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <h3>What to Detect</h3>
+              <div style="margin-top:0.5rem;display:flex;flex-direction:column;gap:0.4rem;font-size:0.8rem">
+                <div>⬛ Surface scratches / cracks</div>
+                <div>🔵 Discolouration / staining</div>
+                <div>❌ Missing component (assembly check)</div>
+                <div>📐 Dimensional mismatch (bounding box size)</div>
+                <div>🔩 Misaligned parts</div>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Logic Flow</h3>
+              <div style="font-family:'Space Mono',monospace;font-size:0.68rem;line-height:1.8;margin-top:0.5rem;color:var(--text)">
+                1. Detect product bbox on belt<br>
+                2. Crop to product ROI<br>
+                3. Run anomaly model on crop<br>
+                4. If anomaly_score > threshold → DEFECT<br>
+                5. Draw heatmap overlay on crop<br>
+                6. Log + Alert + Increment defect counter
+              </div>
+            </div>
+          </div>
+          <div class="card" style="margin-top:1rem">
+            <h3>Metrics to Display</h3>
+            <div class="grid-4" style="margin-top:0.75rem">
+              <div style="text-align:center;padding:0.75rem;background:var(--surface2);border-radius:6px">
+                <div style="font-size:1.2rem;font-weight:800;color:var(--accent)">247</div>
+                <div style="font-size:0.65rem;color:var(--muted);font-family:'Space Mono',monospace">UNITS INSPECTED</div>
+              </div>
+              <div style="text-align:center;padding:0.75rem;background:var(--surface2);border-radius:6px">
+                <div style="font-size:1.2rem;font-weight:800;color:var(--danger)">8</div>
+                <div style="font-size:0.65rem;color:var(--muted);font-family:'Space Mono',monospace">DEFECTS FOUND</div>
+              </div>
+              <div style="text-align:center;padding:0.75rem;background:var(--surface2);border-radius:6px">
+                <div style="font-size:1.2rem;font-weight:800;color:var(--warn)">3.2%</div>
+                <div style="font-size:0.65rem;color:var(--muted);font-family:'Space Mono',monospace">DEFECT RATE</div>
+              </div>
+              <div style="text-align:center;padding:0.75rem;background:var(--surface2);border-radius:6px">
+                <div style="font-size:1.2rem;font-weight:800;color:var(--accent)">96.8%</div>
+                <div style="font-size:0.65rem;color:var(--muted);font-family:'Space Mono',monospace">PASS RATE</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SAFETY -->
+        <div class="vtab-panel" id="vp-safety">
+          <div class="card" style="border-color:rgba(255,68,68,0.3);margin-bottom:1rem">
+            <h3 style="color:var(--danger)">🦺 Worker Safety / PPE / Accidents</h3>
+            <p>Real-time PPE compliance monitoring and restricted zone enforcement.</p>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <h3>What to Detect</h3>
+              <div style="margin-top:0.5rem;display:flex;flex-direction:column;gap:0.4rem;font-size:0.8rem">
+                <div>⛑️ Helmet present / absent</div>
+                <div>🦺 Safety vest present / absent</div>
+                <div>🥽 Goggles / face shield</div>
+                <div>🚧 Person in restricted zone polygon</div>
+                <div>🔥 Fire / smoke detection</div>
+                <div>🤸 Fall detection (person bbox aspect ratio)</div>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Zone Config (config.json)</h3>
+              <pre style="font-family:'Space Mono',monospace;font-size:0.68rem;line-height:1.8;margin-top:0.5rem;color:var(--text)">
+{
+  "zones": {
+    "restricted_A": {
+      "polygon": [[120,80],[320,80],
+                  [320,400],[120,400]],
+      "alert": "ZONE_BREACH",
+      "severity": "HIGH"
+    }
+  },
+  "ppe_required": ["helmet", "vest"]
+}
+              </pre>
+            </div>
+          </div>
+          <div class="card" style="margin-top:1rem">
+            <h3>Alert Types & Severities</h3>
+            <div style="margin-top:0.75rem;display:flex;flex-direction:column;gap:0.4rem;font-size:0.8rem">
+              <div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--border)">
+                <span>No Helmet</span><span style="color:var(--danger)">HIGH · 10s cooldown</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--border)">
+                <span>No Safety Vest</span><span style="color:var(--warn)">MEDIUM · 30s cooldown</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--border)">
+                <span>Zone Intrusion</span><span style="color:var(--danger)">HIGH · 5s cooldown</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:0.4rem 0">
+                <span>Fall Detected</span><span style="color:var(--danger)">CRITICAL · 0s cooldown</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TRAFFIC -->
+        <div class="vtab-panel" id="vp-traffic">
+          <div class="card card-accent-blue" style="margin-bottom:1rem">
+            <h3 style="color:var(--accent4)">🚦 Traffic Management</h3>
+            <p>Vehicle counting, queue estimation, and violation detection.</p>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <h3>What to Detect</h3>
+              <div style="margin-top:0.5rem;display:flex;flex-direction:column;gap:0.4rem;font-size:0.8rem">
+                <div>🚗 Car / Truck / Bike / Auto classification</div>
+                <div>📏 Vehicle count crossing virtual line</div>
+                <div>🅿️ Queue length (vehicles in ROI box)</div>
+                <div>🔴 Red-light violation (line + signal state)</div>
+                <div>↩️ Wrong-way entry detection</div>
+                <div>🌡️ Congestion heatmap over time</div>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Supervision Line Counter</h3>
+              <pre style="font-family:'Space Mono',monospace;font-size:0.68rem;line-height:1.8;margin-top:0.5rem;color:var(--text)">
+<span style="color:var(--accent4)">import</span> supervision <span style="color:var(--accent4)">as</span> sv
+
+line = sv.LineZone(
+  start=sv.Point(0, 320),
+  end=sv.Point(640, 320)
+)
+tracker = sv.ByteTrack()
+
+<span style="color:var(--muted)"># In frame loop:</span>
+tracks = tracker.update(detections)
+line.trigger(detections=tracks)
+count = line.in_count + line.out_count
+              </pre>
+            </div>
+          </div>
+          <div class="card" style="margin-top:1rem">
+            <h3>Metrics Dashboard</h3>
+            <div class="grid-4" style="margin-top:0.75rem">
+              <div style="text-align:center;padding:0.75rem;background:var(--surface2);border-radius:6px">
+                <div style="font-size:1.2rem;font-weight:800;color:var(--accent4)">1,247</div>
+                <div style="font-size:0.65rem;color:var(--muted);font-family:'Space Mono',monospace">VEHICLES TODAY</div>
+              </div>
+              <div style="text-align:center;padding:0.75rem;background:var(--surface2);border-radius:6px">
+                <div style="font-size:1.2rem;font-weight:800;color:var(--danger)">4</div>
+                <div style="font-size:0.65rem;color:var(--muted);font-family:'Space Mono',monospace">VIOLATIONS</div>
+              </div>
+              <div style="text-align:center;padding:0.75rem;background:var(--surface2);border-radius:6px">
+                <div style="font-size:1.2rem;font-weight:800;color:var(--warn)">18</div>
+                <div style="font-size:0.65rem;color:var(--muted);font-family:'Space Mono',monospace">QUEUE NOW</div>
+              </div>
+              <div style="text-align:center;padding:0.75rem;background:var(--surface2);border-radius:6px">
+                <div style="font-size:1.2rem;font-weight:800;color:var(--accent)">42/min</div>
+                <div style="font-size:0.65rem;color:var(--muted);font-family:'Space Mono',monospace">THROUGHPUT</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RESTAURANT -->
+        <div class="vtab-panel" id="vp-resto">
+          <div class="card card-accent-purple" style="margin-bottom:1rem">
+            <h3 style="color:var(--accent3)">🍽️ Restaurant Efficiency</h3>
+            <p>Occupancy tracking, queue management, and staff performance metrics.</p>
+          </div>
+          <div class="grid-2">
+            <div class="card">
+              <h3>What to Detect</h3>
+              <div style="margin-top:0.5rem;display:flex;flex-direction:column;gap:0.4rem;font-size:0.8rem">
+                <div>👥 Person count per table zone</div>
+                <div>⏱️ Dwell time per tracked person ID</div>
+                <div>🪑 Empty table detection (no person in zone)</div>
+                <div>🧍 Queue length at counter</div>
+                <div>👨‍🍳 Staff vs customer classification (optional)</div>
+                <div>😷 Mask compliance for kitchen staff</div>
+              </div>
+            </div>
+            <div class="card">
+              <h3>Dwell Time Logic</h3>
+              <pre style="font-family:'Space Mono',monospace;font-size:0.68rem;line-height:1.8;margin-top:0.5rem;color:var(--text)">
+<span style="color:var(--muted)"># Track entry time per person ID</span>
+entry_times = {}
+
+<span style="color:var(--accent4)">for</span> track_id, bbox <span style="color:var(--accent4)">in</span> tracks:
+  <span style="color:var(--accent4)">if</span> in_zone(bbox, table_zone):
+    <span style="color:var(--accent4)">if</span> track_id <span style="color:var(--accent4)">not in</span> entry_times:
+      entry_times[track_id] = time.now()
+    dwell = time.now() - entry_times[track_id]
+    <span style="color:var(--accent4)">if</span> dwell > MAX_DWELL:
+      alert("Table overstay", track_id)
+              </pre>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ==================== BUILD PLAN ==================== -->
+<section id="build">
+  <div class="container">
+    <div class="hero">
+      <div class="tag">// Execution</div>
+      <h1>Build <span>Plan</span></h1>
+      <p class="subtitle">Hour-by-hour for a solo developer. Realistic, ordered, with clear checkpoints.</p>
+    </div>
+
+    <div class="grid-2" style="margin-bottom:2rem">
+      <div class="card card-accent-green">
+        <h3 style="color:var(--accent)">✅ What to build first</h3>
+        <p>Core pipeline → one vertical working → MJPEG stream live → WebSocket stats → frontend connected. Get something running on screen ASAP. Everything else is additive.</p>
+      </div>
+      <div class="card" style="border-color:rgba(255,68,68,0.3)">
+        <h3 style="color:var(--danger)">❌ What to skip</h3>
+        <p>Training any model from scratch. User auth. Database migrations. Docker setup. Mobile responsive. Multiple simultaneous camera streams. These can all be "future work" on the last slide.</p>
+      </div>
+    </div>
+
+    <div class="section-label">12-Hour Sprint Timeline</div>
+    <div class="section-title" style="margin-bottom:1.5rem">Hour-by-<span>Hour</span></div>
+
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-dot timeline-dot-green"></div>
+        <div class="timeline-time">H 0:00 — H 0:30</div>
+        <div class="timeline-title">Environment Setup</div>
+        <div class="timeline-body">Create folders, install packages, download demo videos, test YOLOv8 runs on webcam. Goal: <code style="background:var(--surface2);padding:0 4px;border-radius:2px">model.predict(source=0, show=True)</code> working.</div>
+        <div class="tasks">
+          <span class="task">pip install ultralytics supervision fastapi uvicorn</span>
+          <span class="task">download demo .mp4 files</span>
+          <span class="task">test yolov8n.pt on webcam</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot timeline-dot-green"></div>
+        <div class="timeline-time">H 0:30 — H 2:00</div>
+        <div class="timeline-title">Core Backend — Camera + MJPEG Stream</div>
+        <div class="timeline-body">Build camera_manager.py (VideoCapture thread + queue). Build inference_engine.py (YOLO on frames, annotated output). Wire up FastAPI with /stream endpoint. Test: open browser → see annotated video.</div>
+        <div class="tasks">
+          <span class="task">camera_manager.py</span>
+          <span class="task">inference_engine.py</span>
+          <span class="task">GET /stream MJPEG</span>
+          <span class="task">browser test ✓</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot timeline-dot-orange"></div>
+        <div class="timeline-time">H 2:00 — H 4:00</div>
+        <div class="timeline-title">Safety Vertical + Alerts (First Vertical)</div>
+        <div class="timeline-body">Start with Safety — it's the most visually dramatic (red boxes, alerts). Load PPE model. Implement zone polygon check. Build alert_manager.py with cooldown. Add /ws/alerts WebSocket.</div>
+        <div class="tasks">
+          <span class="task">logic/safety.py</span>
+          <span class="task">PPE model load</span>
+          <span class="task">zone polygon check</span>
+          <span class="task">alert_manager.py</span>
+          <span class="task">ws/alerts</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot timeline-dot-orange"></div>
+        <div class="timeline-time">H 4:00 — H 5:30</div>
+        <div class="timeline-title">Traffic Vertical</div>
+        <div class="timeline-body">Use yolov8n.pt (already loaded). Add supervision ByteTrack + LineZone. Count vehicles crossing virtual line. Calculate queue in ROI. Push to /ws/stats.</div>
+        <div class="tasks">
+          <span class="task">logic/traffic.py</span>
+          <span class="task">ByteTrack integration</span>
+          <span class="task">LineZone counter</span>
+          <span class="task">queue ROI count</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot timeline-dot-blue"></div>
+        <div class="timeline-time">H 5:30 — H 7:00</div>
+        <div class="timeline-title">Restaurant + Manufacturing Verticals</div>
+        <div class="timeline-body">Restaurant reuses traffic person-tracking logic with table zone dwell timing. Manufacturing: use pretrained defect model or OpenCV contour fallback. Both are lighter lifts now that core is done.</div>
+        <div class="tasks">
+          <span class="task">logic/restaurant.py</span>
+          <span class="task">dwell time tracker</span>
+          <span class="task">logic/manufacturing.py</span>
+          <span class="task">defect model or cv2 fallback</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot timeline-dot-blue"></div>
+        <div class="timeline-time">H 7:00 — H 9:30</div>
+        <div class="timeline-title">Frontend — Dashboard UI (Your Part)</div>
+        <div class="timeline-body">Build the 3 screens from wireframes above. WebSocket client connects to /ws/stats and /ws/alerts. Img tag points to /stream. Vertical switcher calls POST /api/feed/start. Chart.js for analytics.</div>
+        <div class="tasks">
+          <span class="task">main dashboard</span>
+          <span class="task">feed setup screen</span>
+          <span class="task">alerts panel</span>
+          <span class="task">Chart.js graphs</span>
+          <span class="task">websocket client.js</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot timeline-dot-purple"></div>
+        <div class="timeline-time">H 9:30 — H 11:00</div>
+        <div class="timeline-title">SQLite Event Log + REST History</div>
+        <div class="timeline-body">Add db.py (SQLite, 1 table: events). Log every alert. Wire GET /api/alerts. Show event table in analytics screen. This makes the demo look complete and production-grade.</div>
+        <div class="tasks">
+          <span class="task">db.py SQLite</span>
+          <span class="task">GET /api/alerts</span>
+          <span class="task">event log table in UI</span>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot timeline-dot-purple"></div>
+        <div class="timeline-time">H 11:00 — H 12:00</div>
+        <div class="timeline-title">Polish + Demo Prep</div>
+        <div class="timeline-body">Test all 4 verticals with demo video files. Make sure alerts fire cleanly. Take screenshots for slides. Prepare a 2-minute demo script. Check confidence thresholds aren't too noisy.</div>
+        <div class="tasks">
+          <span class="task">test all 4 verticals</span>
+          <span class="task">tune conf thresholds</span>
+          <span class="task">demo script written</span>
+          <span class="task">screenshots for deck</span>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <div class="section-label">Demo Day Script</div>
+    <div class="card" style="margin-top:1rem;border-color:rgba(0,255,136,0.3)">
+      <h3 style="color:var(--accent);margin-bottom:1rem">2-Minute Pitch Flow</h3>
+      <div style="display:flex;flex-direction:column;gap:0.75rem;font-size:0.85rem;line-height:1.7">
+        <div><span style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.65rem">0:00–0:20</span><br><strong>Hook:</strong> "Every factory, road, and restaurant already has cameras. They're just watching — not thinking. VisionSync makes them think."</div>
+        <div><span style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.65rem">0:20–0:45</span><br><strong>Live Demo 1 — Safety:</strong> Open webcam, show PPE detection firing, zone intrusion alert popup. "Worker without helmet — immediate alert."</div>
+        <div><span style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.65rem">0:45–1:05</span><br><strong>Live Demo 2 — Traffic:</strong> Switch vertical, play traffic video, show vehicle count ticking up, congestion alert. "Queue of 18 vehicles — signal timing trigger."</div>
+        <div><span style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.65rem">1:05–1:25</span><br><strong>Architecture Point:</strong> "One backend, four verticals, plugs into any existing RTSP camera — no hardware change."</div>
+        <div><span style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.65rem">1:25–1:45</span><br><strong>Analytics:</strong> Show event log, charts. "Everything is logged, auditable, and exportable."</div>
+        <div><span style="color:var(--muted);font-family:'Space Mono',monospace;font-size:0.65rem">1:45–2:00</span><br><strong>Close:</strong> "This is what turns passive surveillance infrastructure into active intelligence."</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+function showSection(id) {
+  document.querySelectorAll('section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+function switchVtab(id, el) {
+  document.querySelectorAll('.vtab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.vtab').forEach(t => {
+    t.classList.remove('active-mfg', 'active-safety', 'active-traffic', 'active-restaurant');
+  });
+  document.getElementById('vp-' + id).classList.add('active');
+  const colorMap = { mfg: 'active-mfg', safety: 'active-safety', traffic: 'active-traffic', resto: 'active-restaurant' };
+  el.classList.add(colorMap[id]);
+}
+</script>
+</body>
+</html>

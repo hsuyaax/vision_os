@@ -1,0 +1,55 @@
+{
+  "verticals": {
+    "manufacturing": {
+      "model": "yolov8n.pt",
+      "classes_of_interest": ["product", "defect", "scratch", "dent"],
+      "confidence_threshold": 0.6,
+      "alert_cooldown": 10,
+      "defect_threshold": 3
+    },
+    "safety": {
+      "model": "yolov8n.pt",
+      "ppe_classes": ["helmet", "vest", "gloves", "person"],
+      "confidence_threshold": 0.7,
+      "alert_cooldown": 15,
+      "zones": [],
+      "fall_detection_enabled": true,
+      "ppe_required": ["helmet", "vest"]
+    },
+    "traffic": {
+      "model": "yolov8n.pt",
+      "vehicle_classes": ["car", "truck", "bus", "motorcycle", "bicycle"],
+      "confidence_threshold": 0.65,
+      "counting_lines": [],
+      "speed_limit": 50,
+      "alert_cooldown": 5
+    },
+    "restaurant": {
+      "model": "yolov8n.pt",
+      "classes_of_interest": ["person", "chair", "dining table"],
+      "confidence_threshold": 0.7,
+      "max_capacity": 50,
+      "dwell_time_threshold": 1800,
+      "alert_cooldown": 30
+    }
+  },
+  "camera": {
+    "default_source": 0,
+    "fps": 30,
+    "resolution": [640, 480],
+    "buffer_size": 2
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8000,
+    "cors_origins": ["*"]
+  },
+  "database": {
+    "path": "events.db",
+    "retention_days": 30
+  },
+  "logging": {
+    "level": "INFO",
+    "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  }
+}

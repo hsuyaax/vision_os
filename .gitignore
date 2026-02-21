@@ -1,0 +1,29 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+
+# Database files
+*.db
+
+# Model weights (large files)
+*.pt
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Demo videos
+demo/*.mp4
+demo/*.avi
+demo/*.mkv
